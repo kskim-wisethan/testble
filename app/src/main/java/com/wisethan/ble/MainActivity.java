@@ -1,15 +1,27 @@
 package com.wisethan.ble;
 
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener{
+    Button scan_btn;
+
+    Spinner ble_spinner;
+    TextView temp_tv;
+    TextView co2_tv;
+    TextView humidity_tv_tv;
+    String[] item;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -18,14 +30,21 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+        scan_btn = findViewById(R.id.ble_scan_btn);
+
+        ble_spinner = findViewById(R.id.ble_spinner);
+
+        scan_btn = findViewById(R.id.ble_scan_btn);
+        temp_tv= findViewById(R.id.temp_tv);
+        co2_tv = findViewById(R.id.co2_tv);
+        humidity_tv_tv = findViewById(R.id.humidity_tv);
+
+        item = new String[]{"선택", "1","2","3","4","5"};
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this.getApplicationContext(), android.R.layout.simple_spinner_item, item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        ble_spinner.setAdapter(adapter);
+        ble_spinner.setOnItemSelectedListener(this);
+
     }
 
     @Override
@@ -48,5 +67,16 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        Toast.makeText(this.getApplicationContext(), item[position], Toast.LENGTH_SHORT).show();
+        Log.v("aaaaa","position"+position);
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+
     }
 }
