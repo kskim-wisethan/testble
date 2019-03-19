@@ -14,6 +14,12 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.wisethan.ble.model.BleModel;
+import com.wisethan.ble.util.BleManager;
+import com.wisethan.ble.util.PermissionManager;
+
+import java.util.ArrayList;
+
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener{
     Button scan_btn;
 
@@ -21,16 +27,24 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     TextView temp_tv;
     TextView co2_tv;
     TextView humidity_tv_tv;
-    String[] item;
+    ArrayList<String> mItems = new ArrayList<String>();
+    ArrayList<BleModel> mDevices = new ArrayList<BleModel>();
+
+    int mScanCount = 0;
+    String mOutput = "";
+    ArrayAdapter<String> mAdapter;
+    BleManager mBleManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        scan_btn = findViewById(R.id.ble_scan_btn);
+        PermissionManager permissionManager = new PermissionManager(this);
+        permissionManager.permissionCheck();
 
         ble_spinner = findViewById(R.id.ble_spinner);
 
@@ -39,12 +53,34 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         co2_tv = findViewById(R.id.co2_tv);
         humidity_tv_tv = findViewById(R.id.humidity_tv);
 
-        item = new String[]{"선택", "1","2","3","4","5"};
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this.getApplicationContext(), android.R.layout.simple_spinner_item, item);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        ble_spinner.setAdapter(adapter);
+        mItems.add("선택");
+        mDevices.add(new BleModel());
+        mAdapter = new ArrayAdapter<>(this.getApplicationContext(), android.R.layout.simple_spinner_item, mItems);
+        mAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        ble_spinner.setAdapter(mAdapter);
         ble_spinner.setOnItemSelectedListener(this);
 
+        mBleManager = BleManager.getInstance(this);
+        mBleManager.scanBleDevice(new BleManager.BleDeviceCallback() {
+            @Override
+            public void onResponse(BleModel model) {
+                String id = model.getDeviceId();
+                if (id.compareTo("C4:64:E3:F0:2E:65") == 0) {
+                    ++mScanCount;
+                    if (mScanCount > 1) {
+                        mBleManager.stopScan();
+                        return;
+                    }
+                    String name = (model.getName() == null) ? getString(R.string.unknown_device) : model.getName();
+                    String record = model.getScanRecord();
+                    mItems.add(name);
+                } else {
+                    mItems.add(id);
+                }
+                mDevices.add(model);
+                mAdapter.notifyDataSetChanged();
+            }
+        });
     }
 
     @Override
@@ -71,7 +107,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        Toast.makeText(this.getApplicationContext(), item[position], Toast.LENGTH_SHORT).show();
+        Toast.makeText(this.getApplicationContext(), mDevices.get(position).getName(), Toast.LENGTH_SHORT).show();
         Log.v("aaaaa","position"+position);
     }
 

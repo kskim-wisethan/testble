@@ -4,4 +4,11 @@
     <string name="appwidget_text">EXAMPLE</string>
     <string name="configure">Configure</string>
     <string name="add_widget">Add widget</string>
+    <string name="ble_not_supported">Bluetooth Low Energy (BLE) not supported</string>
+    <string name="title_bleitem_list">BleItems</string>
+    <string name="title_bleitem_detail">BleItem Detail</string>
+    <string name="bluetooth_not_supported">Bluetooth not supported</string>
+    <string name="ble_supported">Bluetooth Low Energy (BLE) supported.</string>
+    <string name="bluetooth_enabled">Bluetooth enabled</string>
+    <string name="unknown_device">Unknown device</string>
 </resources>
