@@ -81,6 +81,7 @@ public class BleManager {
 
     public void scanBleDevice(final BleDeviceCallback callback) {
         mDeviceCallback = callback;
+
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {

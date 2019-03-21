@@ -27,6 +27,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     TextView temp_tv;
     TextView co2_tv;
     TextView humidity_tv_tv;
+
     ArrayList<String> mItems = new ArrayList<String>();
     ArrayList<BleModel> mDevices = new ArrayList<BleModel>();
 
@@ -34,6 +35,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     String mOutput = "";
     ArrayAdapter<String> mAdapter;
     BleManager mBleManager;
+    int i=0;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +56,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         co2_tv = findViewById(R.id.co2_tv);
         humidity_tv_tv = findViewById(R.id.humidity_tv);
 
+
+
+
         mItems.add("선택");
         mDevices.add(new BleModel());
         mAdapter = new ArrayAdapter<>(this.getApplicationContext(), android.R.layout.simple_spinner_item, mItems);
@@ -60,28 +66,47 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         ble_spinner.setAdapter(mAdapter);
         ble_spinner.setOnItemSelectedListener(this);
 
+        //ble_spinner의 리스트 중복체크 필요
+
+
+
         mBleManager = BleManager.getInstance(this);
-        mBleManager.scanBleDevice(new BleManager.BleDeviceCallback() {
+
+
+        scan_btn.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onResponse(BleModel model) {
-                String id = model.getDeviceId();
-                if (id.compareTo("C4:64:E3:F0:2E:65") == 0) {
-                    ++mScanCount;
-                    if (mScanCount > 1) {
-                        mBleManager.stopScan();
-                        return;
+            public void onClick(View v) {
+                mBleManager.scanBleDevice(new BleManager.BleDeviceCallback() {
+                    @Override
+                    public void onResponse(BleModel model) {
+                        String id = model.getDeviceId();
+                        i++;
+
+                        System.out.println("i: "+i+ " bleModel: "+id );
+
+                        if (id.compareTo("C4:64:E3:F0:2E:65") == 0) {
+                            ++mScanCount;
+                            if (mScanCount > 1) {
+                                mBleManager.stopScan();
+                                return;
+                            }
+                            String name = (model.getName() == null) ? getString(R.string.unknown_device) : model.getName();
+                            String record = model.getScanRecord();
+                            mItems.add(name);
+                        } else {
+                            mItems.add(id);
+                        }
+                        mDevices.add(model);
+                        mAdapter.notifyDataSetChanged();
                     }
-                    String name = (model.getName() == null) ? getString(R.string.unknown_device) : model.getName();
-                    String record = model.getScanRecord();
-                    mItems.add(name);
-                } else {
-                    mItems.add(id);
-                }
-                mDevices.add(model);
-                mAdapter.notifyDataSetChanged();
+                });
+
             }
         });
+
+
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -108,6 +133,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         Toast.makeText(this.getApplicationContext(), mDevices.get(position).getName(), Toast.LENGTH_SHORT).show();
+
         Log.v("aaaaa","position"+position);
     }
 
