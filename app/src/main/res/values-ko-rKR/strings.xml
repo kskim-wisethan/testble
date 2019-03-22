@@ -12,4 +12,5 @@
     <string name="appwidget_text">예시</string>
     <string name="configure">설정</string>
     <string name="add_widget">위젯 추가</string>
+    <string name="test">테스트</string>
 </resources>

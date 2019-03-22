@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Handler;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.wisethan.ble.R;
@@ -56,9 +57,13 @@ public class BleManager {
             if (!mBluetoothAdapter.isEnabled()) {
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 mParent.startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+
             }
         }
     }
+
+
+
 
     private BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
@@ -80,6 +85,8 @@ public class BleManager {
     };
 
     public void scanBleDevice(final BleDeviceCallback callback) {
+
+        System.out.println("@@@@@@@@@@@@@");
         mDeviceCallback = callback;
 
         mHandler.postDelayed(new Runnable() {
@@ -93,6 +100,7 @@ public class BleManager {
         }, SCAN_PERIOD);
 
         mScanning = true;
+
         mBluetoothAdapter.startLeScan(leScanCallback);
     }
 

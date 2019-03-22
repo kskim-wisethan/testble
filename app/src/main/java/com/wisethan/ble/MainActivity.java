@@ -1,6 +1,9 @@
 package com.wisethan.ble;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -18,7 +21,12 @@ import com.wisethan.ble.model.BleModel;
 import com.wisethan.ble.util.BleManager;
 import com.wisethan.ble.util.PermissionManager;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Properties;
 
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener{
     Button scan_btn;
@@ -27,16 +35,18 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     TextView temp_tv;
     TextView co2_tv;
     TextView humidity_tv_tv;
+    Button write_bt;
+    Button read_bt;
 
     ArrayList<String> mItems = new ArrayList<String>();
     ArrayList<BleModel> mDevices = new ArrayList<BleModel>();
 
     int mScanCount = 0;
     String mOutput = "";
+    String mDeviceName ="";
     ArrayAdapter<String> mAdapter;
     BleManager mBleManager;
     int i=0;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,9 +65,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         temp_tv= findViewById(R.id.temp_tv);
         co2_tv = findViewById(R.id.co2_tv);
         humidity_tv_tv = findViewById(R.id.humidity_tv);
-
-
-
+        write_bt = findViewById(R.id.write_bt);
+        read_bt = findViewById(R.id.read_bt);
 
         mItems.add("선택");
         mDevices.add(new BleModel());
@@ -66,45 +75,117 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         ble_spinner.setAdapter(mAdapter);
         ble_spinner.setOnItemSelectedListener(this);
 
+
+        mBleManager = BleManager.getInstance(this);
+        BLEscan();
+
         //ble_spinner의 리스트 중복체크 필요
 
 
-
-        mBleManager = BleManager.getInstance(this);
-
-
+        write_bt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                WriteToProperty();
+            }
+        });
+        read_bt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(getApplicationContext(),ReadToProperty(),Toast.LENGTH_SHORT).show();
+            }
+        });
         scan_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mBleManager.scanBleDevice(new BleManager.BleDeviceCallback() {
-                    @Override
-                    public void onResponse(BleModel model) {
-                        String id = model.getDeviceId();
-                        i++;
-
-                        System.out.println("i: "+i+ " bleModel: "+id );
-
-                        if (id.compareTo("C4:64:E3:F0:2E:65") == 0) {
-                            ++mScanCount;
-                            if (mScanCount > 1) {
-                                mBleManager.stopScan();
-                                return;
-                            }
-                            String name = (model.getName() == null) ? getString(R.string.unknown_device) : model.getName();
-                            String record = model.getScanRecord();
-                            mItems.add(name);
-                        } else {
-                            mItems.add(id);
-                        }
-                        mDevices.add(model);
-                        mAdapter.notifyDataSetChanged();
-                    }
-                });
-
+                BLEscan();
             }
         });
 
+    }
 
+    public void WriteToProperty(){
+        File file = new File(Environment.getDataDirectory()+"/data/"+getPackageName(), mDeviceName);
+
+        FileOutputStream fos = null;
+        try{
+            //property 파일이 없으면 생성
+            if(!file.exists()){
+                file.createNewFile();
+            }
+
+            fos = new FileOutputStream(file);
+
+            //Property 데이터 저장
+            Properties props = new Properties();
+            props.setProperty("test" , "Property에서 데이터를 저장");   //(key , value) 로 저장
+            props.store(fos, "Property Test");
+
+            Log.d("prop", "write success");
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
+    public String ReadToProperty(){
+        //property 파일
+        File file = new File(Environment.getDataDirectory()+"/data/"+getPackageName(), mDeviceName);
+
+        if(!file.exists()){ return ""; }
+
+        FileInputStream fis = null;
+        String data = "";
+        try{
+            fis = new FileInputStream(file);
+
+            //Property 데이터 읽기
+            Properties props = new Properties();
+            props.load(fis);
+            data = props.getProperty("test1", "");  //(key , default value)
+
+            Log.d("prop", "read success");
+        }catch(IOException e){
+            e.printStackTrace();
+        }
+
+        return data;
+    }
+
+
+
+
+
+    public void BLEscan(){
+        mBleManager.scanBleDevice(new BleManager.BleDeviceCallback() {
+            @Override
+            public void onResponse(BleModel model) {
+
+                String id = model.getDeviceId();
+                i++;
+
+                System.out.println("i: "+i+ " bleModel: "+id );
+
+
+                if (id.compareTo("C4:64:E3:F0:2E:65") == 0) {
+                    ++mScanCount;
+                    if (mScanCount > 1) {
+                        mBleManager.stopScan();
+                        return;
+                    }
+                    String name = (model.getName() == null) ? getString(R.string.unknown_device) : model.getName();
+                    String record = model.getScanRecord();
+                    mItems.add(name);
+                } else {
+                    mItems.add(id);
+                }
+
+                String name = (model.getName() == null) ? getString(R.string.unknown_device) : model.getName();
+                String record = model.getScanRecord();
+                mItems.add(name);
+
+                mDevices.add(model);
+                mAdapter.notifyDataSetChanged();
+            }
+        });
     }
 
 
@@ -135,6 +216,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         Toast.makeText(this.getApplicationContext(), mDevices.get(position).getName(), Toast.LENGTH_SHORT).show();
 
         Log.v("aaaaa","position"+position);
+        mDeviceName=parent.getSelectedItem().toString();
+        System.out.println(parent.getSelectedItem().toString()+"!!!!!!!!!!!!!!");
     }
 
     @Override
