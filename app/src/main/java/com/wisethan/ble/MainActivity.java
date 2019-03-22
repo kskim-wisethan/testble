@@ -16,6 +16,7 @@ import android.widget.Toast;
 
 import com.wisethan.ble.model.BleModel;
 import com.wisethan.ble.util.BleManager;
+import com.wisethan.ble.util.Constants;
 import com.wisethan.ble.util.PermissionManager;
 
 import java.util.ArrayList;
@@ -56,9 +57,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         co2_tv = findViewById(R.id.co2_tv);
         humidity_tv_tv = findViewById(R.id.humidity_tv);
 
-
-
-
         mItems.add("선택");
         mDevices.add(new BleModel());
         mAdapter = new ArrayAdapter<>(this.getApplicationContext(), android.R.layout.simple_spinner_item, mItems);
@@ -67,44 +65,50 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         ble_spinner.setOnItemSelectedListener(this);
 
         //ble_spinner의 리스트 중복체크 필요
-
-
-
         mBleManager = BleManager.getInstance(this);
-
-
         scan_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mBleManager.scanBleDevice(new BleManager.BleDeviceCallback() {
                     @Override
                     public void onResponse(BleModel model) {
-                        String id = model.getDeviceId();
-                        i++;
+                        if (Constants.SCAN_FILTER.isEmpty()) {
+                            addDevice(model);
 
-                        System.out.println("i: "+i+ " bleModel: "+id );
-
-                        if (id.compareTo("C4:64:E3:F0:2E:65") == 0) {
-                            ++mScanCount;
-                            if (mScanCount > 1) {
-                                mBleManager.stopScan();
-                                return;
-                            }
-                            String name = (model.getName() == null) ? getString(R.string.unknown_device) : model.getName();
-                            String record = model.getScanRecord();
-                            mItems.add(name);
                         } else {
-                            mItems.add(id);
+                            String id = model.getUuid();
+                            if (id.compareTo(Constants.SCAN_FILTER) == 0) {
+                                mBleManager.stopScan();
+                                addDevice(model);
+                            }
                         }
-                        mDevices.add(model);
-                        mAdapter.notifyDataSetChanged();
                     }
                 });
-
             }
         });
+    }
 
+    private void addDevice(BleModel model) {
+        String id = model.getUuid();
+        int index = findDeviceId(id);
+        if (index >= 0) {
+            mDevices.set(index, model);
+            mItems.set(index, (model.getName() == null) ? getString(R.string.unknown_device) : model.getName());
+        } else {
+            mDevices.add(model);
+            mItems.add((model.getName() == null) ? getString(R.string.unknown_device) : model.getName());
+        }
+        mAdapter.notifyDataSetChanged();
+    }
 
+    private int findDeviceId(String id) {
+        int ret = -1;
+        for (int i = 0; i < mDevices.size(); i++) {
+            if (mDevices.get(i).getUuid().compareTo(id) == 0) {
+                ret = i;
+            }
+        }
+        return ret;
     }
 
 

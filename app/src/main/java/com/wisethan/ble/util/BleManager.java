@@ -21,7 +21,12 @@ public class BleManager {
     private static final int REQUEST_FINE_LOCATION = 2;
     private static final long SCAN_PERIOD = 10000;
 
+    private final String LIST_NAME = "NAME";
+    private final String LIST_UUID = "UUID";
+
     private boolean mScanning = false;
+    private boolean mConnected = false;
+    private String mDeviceAddress = "";
     private Handler mHandler = new Handler();
 
     private Activity mParent;
@@ -62,13 +67,13 @@ public class BleManager {
 
     private BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
-        public void onLeScan(final BluetoothDevice device, int rssi, final byte[] scanRecord) {
+        public void onLeScan(final BluetoothDevice device, final int rssi, final byte[] scanRecord) {
             mParent.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     Map<String, Object> data = new HashMap<>();
-                    data.put("device_id", device.getAddress());
-                    data.put("mac", "");
+                    data.put("uuid", device.getAddress());
+                    data.put("rssi", String.valueOf(rssi));
                     data.put("name", (device.getName() == null) ? mParent.getString(R.string.unknown_device) : device.getName());
                     data.put("description", "");
                     data.put("scan_record", StringUtils.byteArrayInHexFormat(scanRecord));
@@ -81,7 +86,6 @@ public class BleManager {
 
     public void scanBleDevice(final BleDeviceCallback callback) {
         mDeviceCallback = callback;
-
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
