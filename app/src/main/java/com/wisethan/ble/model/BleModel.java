@@ -5,31 +5,31 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class BleModel implements Serializable {
-    private String mDeviceId;
-    private String mMAC;
+    private String mUuid;
+    private String mRssi;
     private String mName;
     private String mDescription;
     private String mScanRecord;
 
     public BleModel() {
-        mDeviceId = "";
-        mMAC = "";
+        mUuid = "";
+        mRssi = "";
         mName = "";
         mDescription = "";
         mScanRecord = "";
     }
 
     public BleModel(Map<String, Object> data) {
-        if (data.containsKey("device_id")) {
-            mDeviceId = (String) data.get("device_id");
+        if (data.containsKey("uuid")) {
+            mUuid = (String) data.get("uuid");
         } else {
-            mDeviceId = "";
+            mUuid = "";
         }
 
-        if (data.containsKey("mac")) {
-            mMAC = (String) data.get("mac");
+        if (data.containsKey("rssi")) {
+            mRssi = (String) data.get("rssi");
         } else {
-            mMAC = "";
+            mRssi = "";
         }
 
         if (data.containsKey("name")) {
@@ -51,12 +51,12 @@ public class BleModel implements Serializable {
         }
     }
 
-    public void setDeviceId(String deviceid) {
-        mDeviceId = deviceid;
+    public void setUuid(String uuid) {
+        mUuid = uuid;
     }
 
-    public void setMAC(String mac) {
-        mMAC = mac;
+    public void setRssi(String rssi) {
+        mRssi = rssi;
     }
 
     public void setName(String name) {
@@ -71,12 +71,12 @@ public class BleModel implements Serializable {
         mScanRecord = scanRecord;
     }
 
-    public String getDeviceId() {
-        return mDeviceId;
+    public String getUuid() {
+        return mUuid;
     }
 
-    public String getMAC() {
-        return mMAC;
+    public String getRssi() {
+        return mRssi;
     }
 
     public String getName() {
@@ -94,8 +94,8 @@ public class BleModel implements Serializable {
     public Map<String, Object> getData() {
         Map<String, Object> data = new HashMap<>();
 
-        data.put("device_id", mDeviceId);
-        data.put("mac", mMAC);
+        data.put("uuid", mUuid);
+        data.put("rssi", mRssi);
         data.put("name", mName);
         data.put("description", mDescription);
         data.put("scan_record", mScanRecord);
