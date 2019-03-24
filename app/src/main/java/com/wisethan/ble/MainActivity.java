@@ -85,13 +85,14 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         write_bt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                WriteToProperty();
+                Utils.WriteToProperty();
             }
         });
         read_bt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getApplicationContext(),ReadToProperty(),Toast.LENGTH_SHORT).show();
+                Log.v("BLE save", Utils.ReadToProperty());
+                Toast.makeText(getApplicationContext(),Utils.ReadToProperty(),Toast.LENGTH_SHORT).show();
             }
         });
         scan_btn.setOnClickListener(new View.OnClickListener() {
@@ -103,57 +104,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     }
 
-    public void WriteToProperty(){
-        File file = new File(Environment.getDataDirectory()+"/data/"+getPackageName(), mDeviceName);
-
-        FileOutputStream fos = null;
-        try{
-            //property 파일이 없으면 생성
-            if(!file.exists()){
-                file.createNewFile();
-            }
-
-            fos = new FileOutputStream(file);
-
-            //Property 데이터 저장
-            Properties props = new Properties();
-            props.setProperty("test" , "Property에서 데이터를 저장");   //(key , value) 로 저장
-            props.store(fos, "Property Test");
-
-            Log.d("prop", "write success");
-        }catch (IOException e){
-            e.printStackTrace();
-        }
-    }
-
-    public String ReadToProperty(){
-        //property 파일
-        File file = new File(Environment.getDataDirectory()+"/data/"+getPackageName(), mDeviceName);
-
-        if(!file.exists()){ return ""; }
-
-        FileInputStream fis = null;
-        String data = "";
-        try{
-            fis = new FileInputStream(file);
-
-            //Property 데이터 읽기
-            Properties props = new Properties();
-            props.load(fis);
-            data = props.getProperty("test1", "");  //(key , default value)
-
-            Log.d("prop", "read success");
-        }catch(IOException e){
-            e.printStackTrace();
-        }
-
-        return data;
-    }
-
-
-
-
-
     public void BLEscan(){
         mBleManager.scanBleDevice(new BleManager.BleDeviceCallback() {
             @Override
@@ -163,7 +113,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 i++;
 
                 System.out.println("i: "+i+ " bleModel: "+id );
-
 
                 if (id.compareTo("C4:64:E3:F0:2E:65") == 0) {
                     ++mScanCount;
