@@ -37,6 +37,7 @@
                 android:layout_height="match_parent">
 
                 <ImageView
+                    android:src="@drawable/temp"
                     android:layout_width="match_parent"
                     android:layout_height="250dp" />
 
@@ -62,6 +63,7 @@
                 android:layout_height="match_parent">
 
                 <ImageView
+                    android:src="@drawable/co2"
                     android:layout_width="match_parent"
                     android:layout_height="250dp" />
 
@@ -75,7 +77,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textSize="50sp"
-                    android:text="0˚"/>
+                    android:text="0 ppm"/>
 
             </LinearLayout>
 
@@ -87,6 +89,7 @@
                 android:layout_height="match_parent">
 
                 <ImageView
+                    android:src="@drawable/humidity"
                     android:layout_width="match_parent"
                     android:layout_height="250dp" />
 

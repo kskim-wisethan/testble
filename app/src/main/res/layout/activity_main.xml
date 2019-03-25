@@ -17,13 +17,13 @@
             android:orientation="horizontal">
 
             <Button
+                android:background="@drawable/refresh"
                 android:id="@+id/ble_scan_btn"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
                 android:layout_weight="1"
                 android:baselineAligned="false"
-                android:gravity="center|left"
-                android:text="Button" />
+                android:gravity="center|left" />
 
             <android.support.v7.widget.Toolbar
                 android:id="@+id/toolbar"

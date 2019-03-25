@@ -9,6 +9,7 @@
     tools:showIn="@layout/activity_main">
 
     <LinearLayout
+        android:background="#0099B4"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
@@ -20,22 +21,37 @@
             android:layout_margin="10dp" />
 
         <LinearLayout
+            android:background="#353535"
+            android:layout_width="match_parent"
+            android:layout_height="0.5dp">
+
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:paddingTop="10dp"
+            android:background="#09C"
             android:gravity="right"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
             <Button
+                android:layout_marginRight="5dp"
                 android:id="@+id/read_bt"
+                android:background="@drawable/button_background"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="읽기"/>
+                android:text="read"/>
             <Button
+                android:layout_marginRight="5dp"
                 android:id="@+id/write_bt"
+                android:background="@drawable/button_background"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="쓰기"/>
+                android:text="write"/>
 
         </LinearLayout>
         <LinearLayout
+            android:background="#09C"
             android:id="@+id/view_layout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -59,9 +75,10 @@
 
                     <ImageView
                         android:layout_width="match_parent"
-                        android:layout_height="150dp"
+                        android:layout_height="130dp"
                         android:layout_marginBottom="15dp"
                         android:text="온도"
+                        android:src="@drawable/temp"
                         android:gravity="center"
                         android:textSize="20sp" />
                     <TextView
@@ -92,8 +109,9 @@
                     android:layout_height="wrap_content">
 
                     <ImageView
+                        android:src="@drawable/co2"
                         android:layout_width="match_parent"
-                        android:layout_height="150dp"
+                        android:layout_height="130dp"
                         android:layout_marginBottom="15sp"
                         android:gravity="center"
                         android:text="이산화탄소"
@@ -114,7 +132,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="15sp"
                         android:gravity="center"
-                        android:text="0"
+                        android:text="0 ppm"
                         android:textSize="20dp"
                         android:textStyle="bold" />
 
@@ -124,41 +142,62 @@
             </LinearLayout>
 
 
-
             <LinearLayout
-                android:layout_weight="1"
-                android:orientation="vertical"
+                android:orientation="horizontal"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
-                <ImageView
+                <LinearLayout
+                    android:layout_weight="1"
+                    android:orientation="vertical"
                     android:layout_width="match_parent"
-                    android:layout_height="150dp"
-                    android:layout_marginBottom="15sp"
-                    android:gravity="center"
-                    android:text="이산화탄소"
-                    android:textSize="20sp" />
+                    android:layout_height="wrap_content">
 
-                <TextView
+                    <ImageView
+                        android:src="@drawable/humidity"
+                        android:layout_width="match_parent"
+                        android:layout_height="130dp"
+                        android:layout_marginBottom="15sp"
+                        android:gravity="center"
+                        android:text="이산화탄소"
+                        android:textSize="20sp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="15sp"
+                        android:gravity="center"
+                        android:text="습도"
+                        android:textSize="20dp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/humidity_tv"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="15sp"
+                        android:gravity="center"
+                        android:text="0˚"
+                        android:textSize="20dp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_weight="1"
+                    android:orientation="vertical"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="15sp"
-                    android:gravity="center"
-                    android:text="습도"
-                    android:textSize="20dp"
-                    android:textStyle="bold" />
+                    android:layout_height="wrap_content">
 
-                <TextView
-                    android:id="@+id/humidity_tv"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="15sp"
-                    android:gravity="center"
-                    android:text="0˚"
-                    android:textSize="20dp"
-                    android:textStyle="bold" />
 
+
+                </LinearLayout>
             </LinearLayout>
+
+
+
+
+
+
 
 
 

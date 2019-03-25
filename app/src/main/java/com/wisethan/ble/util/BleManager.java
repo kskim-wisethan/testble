@@ -3,6 +3,9 @@ package com.wisethan.ble.util;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.le.BluetoothLeScanner;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Handler;
@@ -12,6 +15,7 @@ import android.widget.Toast;
 import com.wisethan.ble.R;
 import com.wisethan.ble.model.BleModel;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,9 +26,17 @@ public class BleManager {
     private static final int REQUEST_FINE_LOCATION = 2;
     private static final long SCAN_PERIOD = 10000;
 
+    private BluetoothGatt mBluetoothGatt;
+
+
+
+
+
+    boolean overlap = false;
     private final String LIST_NAME = "NAME";
     private final String LIST_UUID = "UUID";
 
+    ArrayList<String> uuid = new ArrayList<String>();
     private boolean mScanning = false;
     private boolean mConnected = false;
     private String mDeviceAddress = "";
@@ -33,6 +45,7 @@ public class BleManager {
     private Activity mParent;
     private BluetoothAdapter mBluetoothAdapter;
     private BleDeviceCallback mDeviceCallback;
+
 
     private static BleManager mInstance;
     public static BleManager getInstance(Activity parent) {
@@ -65,8 +78,8 @@ public class BleManager {
 
             }
         }
-    }
 
+    }
 
 
 
@@ -76,22 +89,38 @@ public class BleManager {
             mParent.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Map<String, Object> data = new HashMap<>();
-                    data.put("uuid", device.getAddress());
-                    data.put("rssi", String.valueOf(rssi));
-                    data.put("name", (device.getName() == null) ? mParent.getString(R.string.unknown_device) : device.getName());
-                    data.put("description", "");
-                    data.put("scan_record", StringUtils.byteArrayInHexFormat(scanRecord));
-                    BleModel ble = new BleModel(data);
-                    mDeviceCallback.onResponse(ble);
+
+                    if(uuid.size()==0){
+                        uuid.add(device.getAddress());
+                    }else {
+                        for(int i = 0 ; i<uuid.size() ;i++){
+                            if(uuid.get(i).equals(device.getAddress()))
+                                overlap = true;
+                        }
+                        if(overlap==false){
+                            uuid.add(device.getAddress());
+                            Map<String, Object> data = new HashMap<>();
+                            data.put("uuid", device.getAddress());
+                            data.put("rssi", String.valueOf(rssi));
+                            data.put("name", (device.getName() == null) ? mParent.getString(R.string.unknown_device) : device.getName());
+                            data.put("description", "");
+                            data.put("scan_record", StringUtils.byteArrayInHexFormat(scanRecord));
+                            BleModel ble = new BleModel(data);
+
+                            System.out.println("Address = "+ble.getUuid());
+
+                            mDeviceCallback.onResponse(ble);
+
+                        }
+                        overlap=false;
+                    }
                 }
             });
         }
     };
 
     public void scanBleDevice(final BleDeviceCallback callback) {
-
-        System.out.println("@@@@@@@@@@@@@");
+        System.out.println("scanBleDevice");
         mDeviceCallback = callback;
         mHandler.postDelayed(new Runnable() {
             @Override
@@ -104,12 +133,12 @@ public class BleManager {
         }, SCAN_PERIOD);
 
         mScanning = true;
-
         mBluetoothAdapter.startLeScan(leScanCallback);
     }
 
     public void stopScan() {
         mScanning = false;
+
         mBluetoothAdapter.stopLeScan(leScanCallback);
     }
 }

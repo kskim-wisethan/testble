@@ -1,9 +1,14 @@
 package com.wisethan.ble;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.Settings;
+import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -19,6 +24,7 @@ import android.widget.Toast;
 
 import com.wisethan.ble.model.BleModel;
 import com.wisethan.ble.util.BleManager;
+import com.wisethan.ble.util.Constants;
 import com.wisethan.ble.util.PermissionManager;
 
 import java.io.File;
@@ -30,13 +36,16 @@ import java.util.Properties;
 
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener{
     Button scan_btn;
-
     Spinner ble_spinner;
     TextView temp_tv;
     TextView co2_tv;
     TextView humidity_tv_tv;
     Button write_bt;
     Button read_bt;
+
+
+    private static final int REQUEST_ENABLE_BT = 1;
+    private static final int REQUEST_FINE_LOCATION = 2;
 
     ArrayList<String> mItems = new ArrayList<String>();
     ArrayList<BleModel> mDevices = new ArrayList<BleModel>();
@@ -46,12 +55,31 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     String mDeviceName ="";
     ArrayAdapter<String> mAdapter;
     BleManager mBleManager;
+    AdapterSpinner1 adapterSpinner1;
+
+    LocationManager locationManager;
+
+
+
     int i=0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
+
+        locationManager = (LocationManager)getSystemService(LOCATION_SERVICE);
+
+        if(!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
+            Intent intent = new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+            intent.addCategory(Intent.CATEGORY_DEFAULT);
+            startActivity(intent);
+        }
+
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -68,16 +96,20 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         write_bt = findViewById(R.id.write_bt);
         read_bt = findViewById(R.id.read_bt);
 
+        mBleManager = BleManager.getInstance(this);
+        BLEscan();
+
         mItems.add("선택");
         mDevices.add(new BleModel());
         mAdapter = new ArrayAdapter<>(this.getApplicationContext(), android.R.layout.simple_spinner_item, mItems);
         mAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        ble_spinner.setAdapter(mAdapter);
+        //ble_spinner.setAdapter(mAdapter);
         ble_spinner.setOnItemSelectedListener(this);
 
 
-        mBleManager = BleManager.getInstance(this);
-        BLEscan();
+        adapterSpinner1 = new AdapterSpinner1(this, mItems);
+        ble_spinner.setAdapter(adapterSpinner1);
+
 
         //ble_spinner의 리스트 중복체크 필요
 
@@ -97,10 +129,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         scan_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Toast.makeText(MainActivity.this, "refresh", Toast.LENGTH_SHORT).show();
+
                 BLEscan();
             }
         });
-
     }
 
     public void WriteToProperty(){
@@ -150,46 +183,51 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         return data;
     }
 
-
-
-
-
     public void BLEscan(){
+
         mBleManager.scanBleDevice(new BleManager.BleDeviceCallback() {
+
             @Override
             public void onResponse(BleModel model) {
 
-                String id = model.getDeviceId();
-                i++;
+//                System.out.println("##############22");
+                if (Constants.SCAN_FILTER.isEmpty()) {
+                    addDevice(model);
 
-                System.out.println("i: "+i+ " bleModel: "+id );
-
-
-                if (id.compareTo("C4:64:E3:F0:2E:65") == 0) {
-                    ++mScanCount;
-                    if (mScanCount > 1) {
-                        mBleManager.stopScan();
-                        return;
-                    }
-                    String name = (model.getName() == null) ? getString(R.string.unknown_device) : model.getName();
-                    String record = model.getScanRecord();
-                    mItems.add(name);
                 } else {
-                    mItems.add(id);
+                    String id = model.getUuid();
+                    if (id.compareTo(Constants.SCAN_FILTER) == 0) {
+                        mBleManager.stopScan();
+                        addDevice(model);
+                    }
                 }
-
-                String name = (model.getName() == null) ? getString(R.string.unknown_device) : model.getName();
-                String record = model.getScanRecord();
-                mItems.add(name);
-
-                mDevices.add(model);
-                mAdapter.notifyDataSetChanged();
             }
         });
+    }
+    private void addDevice(BleModel model) {
+        String id = model.getUuid();
+        int index = findDeviceId(id);
 
-
+        //System.out.println(mItems.size()+"@@@@@@"+model.getData());
+        if (index >= 0) {
+            mDevices.set(index, model);
+            mItems.set(index, (model.getName() == null) ? getString(R.string.unknown_device) : model.getName());
+        } else {
+            mDevices.add(model);
+            mItems.add((model.getName() == null) ? getString(R.string.unknown_device) : model.getName());
+        }
+        mAdapter.notifyDataSetChanged();
     }
 
+    private int findDeviceId(String id) {
+        int ret = -1;
+        for (int i = 0; i < mDevices.size(); i++) {
+            if (mDevices.get(i).getUuid().compareTo(id) == 0) {
+                ret = i;
+            }
+        }
+        return ret;
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -215,15 +253,42 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        Toast.makeText(this.getApplicationContext(), mDevices.get(position).getName(), Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this.getApplicationContext(), mDevices.get(position).getName(), Toast.LENGTH_SHORT).show();
 
         Log.v("aaaaa","position"+position);
         mDeviceName=parent.getSelectedItem().toString();
-        System.out.println(parent.getSelectedItem().toString()+"!!!!!!!!!!!!!!");
+//        System.out.println(parent.getSelectedItem().toString()+"!!!!!!!!!!!!!!");
     }
 
     @Override
     public void onNothingSelected(AdapterView<?> parent) {
 
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        switch (requestCode) {
+            case REQUEST_ENABLE_BT:
+                if (resultCode == Activity.RESULT_OK) {
+                    System.out.println("bluetooth ok");
+                    BLEscan();
+                } else {
+                    // 취소 눌렀을 때
+                }
+                break;
+
+            case REQUEST_FINE_LOCATION:
+                if (resultCode == Activity.RESULT_OK) {
+                    System.out.println("GPS ok");
+                    Intent intent = new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                    intent.addCategory(Intent.CATEGORY_DEFAULT);
+                    startActivity(intent);
+
+                } else {
+                    // 취소 눌렀을 때
+                }
+                break;
+        }
     }
 }
