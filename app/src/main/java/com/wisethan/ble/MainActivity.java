@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.graphics.Color;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Environment;
@@ -20,11 +21,14 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -46,7 +50,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 
-public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener{
+public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
     private static final String TAG = MainActivity.class.getSimpleName();
 
     Button scan_btn;
@@ -70,12 +74,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private int mCharacteristicIndex = 0;
 
     ArrayList<String> mItems = new ArrayList<String>();
-    ArrayList<String> pairingDevice = new ArrayList<String>();
+    String pairingDevice = "";
     ArrayList<BleModel> mDevices = new ArrayList<BleModel>();
 
     int mScanCount = 0;
     String mOutput = "";
-    String mDeviceName ="";
+    String mDeviceUUID = "";
     ArrayAdapter<String> mAdapter;
     BleManager mBleManager;
     AdapterSpinner1 adapterSpinner1;
@@ -94,8 +98,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
                         Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
 
-        locationManager = (LocationManager)getSystemService(LOCATION_SERVICE);
-        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
+        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             Intent intent = new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
             intent.addCategory(Intent.CATEGORY_DEFAULT);
             startActivity(intent);
@@ -110,7 +114,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         ble_spinner = findViewById(R.id.ble_spinner);
 
         scan_btn = findViewById(R.id.ble_scan_btn);
-        mTempTv= findViewById(R.id.temp_tv);
+        mTempTv = findViewById(R.id.temp_tv);
         mCO2Tv = findViewById(R.id.co2_tv);
         mHumidityTv = findViewById(R.id.humidity_tv);
         write_bt = findViewById(R.id.write_bt);
@@ -121,12 +125,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         mItems.add("선택");
         mDevices.add(new BleModel());
-        mAdapter = new ArrayAdapter<>(this.getApplicationContext(), android.R.layout.simple_spinner_item, mItems);
-        mAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+//        mAdapter = new ArrayAdapter<>(this.getApplicationContext(), android.R.layout.simple_spinner_item, mItems);
+//        mAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         ble_spinner.setOnItemSelectedListener(this);
 
-        adapterSpinner1 = new AdapterSpinner1(this, mItems);
+        adapterSpinner1 = new AdapterSpinner1(this, mDevices, pairingDevice);
         ble_spinner.setAdapter(adapterSpinner1);
+        adapterSpinner1.notifyDataSetChanged();
 
         write_bt.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -176,13 +181,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         mBluetoothLeService = null;
     }
 
-    public void WriteToProperty(){
-        File file = new File(Environment.getDataDirectory()+"/data/"+getPackageName(), mDeviceName);
+    public void WriteToProperty() {
+        File file = new File(Environment.getDataDirectory() + "/data/" + getPackageName(), mDeviceUUID);
 
         FileOutputStream fos = null;
-        try{
+        try {
             //property 파일이 없으면 생성
-            if(!file.exists()){
+            if (!file.exists()) {
                 file.createNewFile();
             }
 
@@ -190,24 +195,26 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
             //Property 데이터 저장
             Properties props = new Properties();
-            props.setProperty("test" , "Property에서 데이터를 저장");   //(key , value) 로 저장
+            props.setProperty("test", "Property에서 데이터를 저장");   //(key , value) 로 저장
             props.store(fos, "Property Test");
 
             Log.d("prop", "write success");
-        }catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public String ReadToProperty(){
+    public String ReadToProperty() {
         //property 파일
-        File file = new File(Environment.getDataDirectory()+"/data/"+getPackageName(), mDeviceName);
+        File file = new File(Environment.getDataDirectory() + "/data/" + getPackageName(), mDeviceUUID);
 
-        if(!file.exists()){ return ""; }
+        if (!file.exists()) {
+            return "";
+        }
 
         FileInputStream fis = null;
         String data = "";
-        try{
+        try {
             fis = new FileInputStream(file);
 
             //Property 데이터 읽기
@@ -216,14 +223,14 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             data = props.getProperty("test1", "");  //(key , default value)
 
             Log.d("prop", "read success");
-        }catch(IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
         return data;
     }
 
-    public void BLEscan(){
+    public void BLEscan() {
 
         mBleManager.scanBleDevice(new BleManager.BleDeviceCallback() {
 
@@ -243,6 +250,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             }
         });
     }
+
     private void addDevice(BleModel model) {
         String id = model.getUuid();
         int index = findDeviceId(id);
@@ -255,7 +263,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             mDevices.add(model);
             mItems.add((model.getName() == null) ? getString(R.string.unknown_device) : model.getName());
         }
-        mAdapter.notifyDataSetChanged();
+        adapterSpinner1.notifyDataSetChanged();
     }
 
     private int findDeviceId(String id) {
@@ -294,15 +302,22 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         //Toast.makeText(this.getApplicationContext(), mDevices.get(position).getName(), Toast.LENGTH_SHORT).show();
 
-        Log.v("aaaaa","position"+position);
-        mDeviceName=parent.getSelectedItem().toString();
-//        System.out.println(parent.getSelectedItem().toString()+"!!!!!!!!!!!!!!");
+
+        Log.v("aaaaa", "position" + position);
+        if (!mDevices.get(position).getUuid().equals("")) {
+            mDeviceUUID = mDevices.get(position).getUuid();
+            System.out.println(mDeviceUUID + "!!!!!!!!!!!!!!");
+        }
 
         if (position > 0) {
+
             mModel = mDevices.get(position);
             Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
             bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+
         }
+
+
     }
 
     @Override
@@ -516,6 +531,80 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 mNotifyCharacteristic = characteristic;
                 mBluetoothLeService.setCharacteristicNotification(characteristic, true);
             }
+        }
+    }
+
+
+    public class AdapterSpinner1 extends BaseAdapter {
+
+
+        Context context;
+        ArrayList<BleModel> data;
+        String pairingDevice = "";
+        LayoutInflater inflater;
+//    ArrayList<String> data;
+
+
+        public AdapterSpinner1(Context context, ArrayList<BleModel> data, String pairingDevice) {
+            this.context = context;
+            this.data = data;
+            this.pairingDevice = pairingDevice;
+
+
+            inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        }
+
+
+        @Override
+        public int getCount() {
+            if (data != null) return data.size();
+            else return 0;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            if (convertView == null) {
+                convertView = inflater.inflate(R.layout.spinner_spinner1_normal, parent, false);
+            }
+
+            if (data != null) {
+                //데이터세팅
+                String text = data.get(position).getName();
+                ((TextView) convertView.findViewById(R.id.spinnerText)).setText(text);
+            }
+
+            return convertView;
+        }
+
+        @Override
+        public View getDropDownView(int position, View convertView, ViewGroup parent) {
+            if (convertView == null) {
+                convertView = inflater.inflate(R.layout.spinner_spinner1_dropdown, parent, false);
+            }
+
+            //데이터세팅
+            String text = data.get(position).getName();
+            TextView tv  = ((TextView) convertView.findViewById(R.id.spinnerText));
+            tv.setText(text);
+            if (mDeviceUUID != "" && mDeviceUUID.equals(data.get(position).getUuid())) {
+               tv.setBackgroundColor(Color.parseColor("#C2C2C2"));
+//                System.out.println("!!!"+mDeviceUUID+"@@@"+data.get(position).getUuid());
+
+            }
+            System.out.println("DropDownPosition :"+position +"  UUID :"+data.get(position).getUuid());
+
+            return convertView;
+        }
+
+        @Override
+        public Object getItem(int position) {
+
+            return data.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
         }
     }
 }
