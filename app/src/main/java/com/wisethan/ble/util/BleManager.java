@@ -78,10 +78,7 @@ public class BleManager {
 
             }
         }
-
     }
-
-
 
     private BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
@@ -93,9 +90,11 @@ public class BleManager {
                     if(uuid.size()==0){
                         uuid.add(device.getAddress());
                     }else {
-                        for(int i = 0 ; i<uuid.size() ;i++){
-                            if(uuid.get(i).equals(device.getAddress()))
+                        for (int i = 0 ; i<uuid.size() ;i++) {
+                            if(uuid.get(i).equals(device.getAddress())) {
                                 overlap = true;
+                                break;
+                            }
                         }
                         if(overlap==false){
                             uuid.add(device.getAddress());
@@ -138,7 +137,6 @@ public class BleManager {
 
     public void stopScan() {
         mScanning = false;
-
         mBluetoothAdapter.stopLeScan(leScanCallback);
     }
 }
