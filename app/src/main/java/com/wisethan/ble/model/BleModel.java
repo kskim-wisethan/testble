@@ -14,7 +14,7 @@ public class BleModel implements Serializable {
     public BleModel() {
         mUuid = "";
         mRssi = "";
-        mName = "";
+        mName = "선택";
         mDescription = "";
         mScanRecord = "";
     }

@@ -8,10 +8,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <ImageView
-        android:src="@drawable/refresh"
-        android:layout_width="24dp"
-        android:layout_height="24dp" />
+
 
     <TextView
         android:id="@+id/spinnerText"
@@ -25,13 +22,8 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent" />
 
-    <ImageView
-        android:src="@drawable/refresh"
-        android:scaleType="centerInside"
-        android:layout_width="20dp"
-        android:layout_height="match_parent" />
 
 
-    출처: https://ghj1001020.tistory.com/311 [혁준 블로그]
+
 
 </LinearLayout>

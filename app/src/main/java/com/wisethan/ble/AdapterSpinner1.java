@@ -1,13 +1,16 @@
 package com.wisethan.ble;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.wisethan.ble.R;
+import com.wisethan.ble.model.BleModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,13 +19,15 @@ public class AdapterSpinner1 extends BaseAdapter {
 
 
     Context context;
-    ArrayList<String> data;
+    ArrayList<BleModel> data;
+    ArrayList<String> pairingDevice = new ArrayList<String>();
     LayoutInflater inflater;
 
 
-    public AdapterSpinner1(Context context, ArrayList<String> data){
+    public AdapterSpinner1(Context context, ArrayList<BleModel> data, ArrayList<String> pairingDevice){
         this.context = context;
         this.data = data;
+        this.pairingDevice = pairingDevice;
         inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
 
@@ -41,7 +46,7 @@ public class AdapterSpinner1 extends BaseAdapter {
 
         if(data!=null){
             //데이터세팅
-            String text = data.get(position);
+            String text = data.get(position).getName();
             ((TextView)convertView.findViewById(R.id.spinnerText)).setText(text);
         }
 
@@ -55,8 +60,16 @@ public class AdapterSpinner1 extends BaseAdapter {
         }
 
         //데이터세팅
-        String text = data.get(position);
+        String text = data.get(position).getName();
         ((TextView)convertView.findViewById(R.id.spinnerText)).setText(text);
+
+        for (int i = 0; i<pairingDevice.size();i++){
+            if(pairingDevice.get(i).equals(data.get(position).getUuid())){
+                convertView.setBackgroundColor(Color.parseColor("#C2C2C2"));
+            }
+        }
+
+
 
         return convertView;
     }

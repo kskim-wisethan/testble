@@ -48,6 +48,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private static final int REQUEST_FINE_LOCATION = 2;
 
     ArrayList<String> mItems = new ArrayList<String>();
+    ArrayList<String> pairingDevice = new ArrayList<String>();
     ArrayList<BleModel> mDevices = new ArrayList<BleModel>();
 
     int mScanCount = 0;
@@ -99,19 +100,18 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         mBleManager = BleManager.getInstance(this);
         BLEscan();
 
-        mItems.add("선택");
+//        mItems.add("선택");
         mDevices.add(new BleModel());
-        mAdapter = new ArrayAdapter<>(this.getApplicationContext(), android.R.layout.simple_spinner_item, mItems);
-        mAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        //ble_spinner.setAdapter(mAdapter);
+//        mAdapter = new ArrayAdapter<>(this.getApplicationContext(), android.R.layout.simple_spinner_item, mItems);
+//        mAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+//        ble_spinner.setAdapter(mAdapter);
+
         ble_spinner.setOnItemSelectedListener(this);
 
-
-        adapterSpinner1 = new AdapterSpinner1(this, mItems);
+        adapterSpinner1 = new AdapterSpinner1(this, mDevices,pairingDevice);
         ble_spinner.setAdapter(adapterSpinner1);
 
 
-        //ble_spinner의 리스트 중복체크 필요
 
 
         write_bt.setOnClickListener(new View.OnClickListener() {
@@ -130,7 +130,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             @Override
             public void onClick(View v) {
                 Toast.makeText(MainActivity.this, "refresh", Toast.LENGTH_SHORT).show();
-
+                //adapterSpinner1.notifyDataSetChanged();
                 BLEscan();
             }
         });
@@ -211,12 +211,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         //System.out.println(mItems.size()+"@@@@@@"+model.getData());
         if (index >= 0) {
             mDevices.set(index, model);
-            mItems.set(index, (model.getName() == null) ? getString(R.string.unknown_device) : model.getName());
+//            mItems.set(index, (model.getName() == null) ? getString(R.string.unknown_device) : model.getName());
         } else {
             mDevices.add(model);
-            mItems.add((model.getName() == null) ? getString(R.string.unknown_device) : model.getName());
+//            mItems.add((model.getName() == null) ? getString(R.string.unknown_device) : model.getName());
         }
-        mAdapter.notifyDataSetChanged();
+        adapterSpinner1.notifyDataSetChanged();
     }
 
     private int findDeviceId(String id) {
@@ -257,6 +257,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         Log.v("aaaaa","position"+position);
         mDeviceName=parent.getSelectedItem().toString();
+
+        ble_spinner.setPrompt("선택");
+
 //        System.out.println(parent.getSelectedItem().toString()+"!!!!!!!!!!!!!!");
     }
 
