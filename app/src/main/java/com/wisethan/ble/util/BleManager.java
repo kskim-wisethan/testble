@@ -78,10 +78,7 @@ public class BleManager {
 
             }
         }
-
     }
-
-
 
     private BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
@@ -138,7 +135,6 @@ public class BleManager {
 
     public void stopScan() {
         mScanning = false;
-
         mBluetoothAdapter.stopLeScan(leScanCallback);
     }
 }
