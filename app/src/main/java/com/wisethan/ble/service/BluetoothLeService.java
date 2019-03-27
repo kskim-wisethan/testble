@@ -48,6 +48,7 @@ public class BluetoothLeService extends Service {
     public final static UUID UUID_CUSTOM_CHARACTERISTIC3 = UUID.fromString(Constants.CUSTOM_CHARACTERISTIC3);
     public final static UUID UUID_CUSTOM_CHARACTERISTIC4 = UUID.fromString(Constants.CUSTOM_CHARACTERISTIC4);
 
+
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
@@ -94,6 +95,7 @@ public class BluetoothLeService extends Service {
     private void broadcastUpdate(final String action,
                                  final BluetoothGattCharacteristic characteristic) {
         final Intent intent = new Intent(action);
+
 
         if (UUID_HEART_RATE_MEASUREMENT.equals(characteristic.getUuid())) {
             int flag = characteristic.getProperties();

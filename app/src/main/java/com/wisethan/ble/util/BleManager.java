@@ -96,6 +96,7 @@ public class BleManager {
                                 break;
                             }
                         }
+
                         if(overlap==false){
                             uuid.add(device.getAddress());
                             Map<String, Object> data = new HashMap<>();
@@ -106,7 +107,6 @@ public class BleManager {
                             data.put("scan_record", StringUtils.byteArrayInHexFormat(scanRecord));
                             BleModel ble = new BleModel(data);
 
-                            System.out.println("Address = "+ble.getUuid());
 
                             mDeviceCallback.onResponse(ble);
 

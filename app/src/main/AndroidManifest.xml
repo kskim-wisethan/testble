@@ -19,30 +19,18 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <receiver android:name=".BLE_Widget2">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
 
-            <meta-data
-            android:name="android.appwidget.provider"
-            android:resource="@xml/ble__widget2_info" />
-        </receiver>
-        <receiver android:name=".BLE_Widget">
+        <receiver android:name="com.wisethan.ble.WidgetProvider"
+            android:label="위젯">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
 
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/ble__widget_info" />
-    </receiver>
+                android:resource="@xml/widget_provider_basic" />
+        </receiver>
 
-        <activity android:name=".BLE_WidgetConfigureActivity">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
-            </intent-filter>
-        </activity>
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"

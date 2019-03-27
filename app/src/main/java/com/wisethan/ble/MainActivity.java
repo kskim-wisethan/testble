@@ -2,6 +2,7 @@ package com.wisethan.ble;
 
 import android.Manifest;
 import android.app.Activity;
+import android.appwidget.AppWidgetManager;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.content.BroadcastReceiver;
@@ -10,6 +11,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.location.LocationManager;
 import android.os.Bundle;
@@ -50,7 +52,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 
-public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
+public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener  {
     private static final String TAG = MainActivity.class.getSimpleName();
 
     Button scan_btn;
@@ -127,22 +129,35 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         mDevices.add(new BleModel());
 //        mAdapter = new ArrayAdapter<>(this.getApplicationContext(), android.R.layout.simple_spinner_item, mItems);
 //        mAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        ble_spinner.setOnItemSelectedListener(this);
+//        ble_spinner.setOnItemSelectedListener(this);
 
         adapterSpinner1 = new AdapterSpinner1(this, mDevices, pairingDevice);
         ble_spinner.setAdapter(adapterSpinner1);
         adapterSpinner1.notifyDataSetChanged();
 
+        ble_spinner.setOnItemSelectedListener(this);
         write_bt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Toast.makeText(getApplicationContext(),"Write ok",Toast.LENGTH_SHORT).show();
                 WriteToProperty();
             }
         });
         read_bt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //Toast.makeText(getApplicationContext(),ReadToProperty(),Toast.LENGTH_SHORT).show();
+
+                SharedPreferences sharedPreferences = getSharedPreferences("SHARE_PREF",MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putString("uuid", mDeviceUUID);
+                editor.commit();
+
+                Intent intent = new Intent(MainActivity.this, WidgetProvider.class);
+                intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+                MainActivity.this.sendBroadcast(intent);
+
+
+
                 mServiceIndex = 0;
                 mCharacteristicIndex = 0;
                 requestCharacteristicValue();
@@ -195,7 +210,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
             //Property 데이터 저장
             Properties props = new Properties();
-            props.setProperty("test", "Property에서 데이터를 저장");   //(key , value) 로 저장
+            props.setProperty("uuid", mDeviceUUID);   //(key , value) 로 저장
             props.store(fos, "Property Test");
 
             Log.d("prop", "write success");
@@ -220,7 +235,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             //Property 데이터 읽기
             Properties props = new Properties();
             props.load(fis);
-            data = props.getProperty("test1", "");  //(key , default value)
+            data = props.getProperty("uuid", "");  //(key , default value)
 
             Log.d("prop", "read success");
         } catch (IOException e) {
@@ -236,7 +251,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
             @Override
             public void onResponse(BleModel model) {
-//              System.out.println("##############22");
                 if (Constants.SCAN_FILTER.isEmpty()) {
                     addDevice(model);
 
@@ -255,7 +269,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         String id = model.getUuid();
         int index = findDeviceId(id);
 
-        //System.out.println(mItems.size()+"@@@@@@"+model.getData());
         if (index >= 0) {
             mDevices.set(index, model);
             mItems.set(index, (model.getName() == null) ? getString(R.string.unknown_device) : model.getName());
@@ -306,7 +319,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         Log.v("aaaaa", "position" + position);
         if (!mDevices.get(position).getUuid().equals("")) {
             mDeviceUUID = mDevices.get(position).getUuid();
-            System.out.println(mDeviceUUID + "!!!!!!!!!!!!!!");
         }
 
         if (position > 0) {
@@ -421,15 +433,15 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
                 if (uuidString.compareTo(Constants.CUSTOM_CHARACTERISTIC1) == 0) {
                     // CO2
-                    mCO2Tv.setText(characteristicValueHex);
+                    mCO2Tv.setText(characteristicValueHex+" ppm");
 
                 } else if (uuidString.compareTo(Constants.CUSTOM_CHARACTERISTIC2) == 0) {
                     // Temperature
-                    mTempTv.setText(characteristicValueHex);
+                    mTempTv.setText(characteristicValueHex+"˚");
 
                 } else if (uuidString.compareTo(Constants.CUSTOM_CHARACTERISTIC3) == 0) {
                     // Humidity
-                    mHumidityTv.setText(characteristicValueHex);
+                    mHumidityTv.setText(characteristicValueHex+"˚");
 
                 } else if (uuidString.compareTo(Constants.CUSTOM_CHARACTERISTIC4) == 0) {
                     // Update Period
@@ -563,38 +575,50 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
+//            if (convertView == null) {
+//                convertView = inflater.inflate(R.layout.spinner_spinner1_normal, parent, false);
+//            }
+
             if (convertView == null) {
-                convertView = inflater.inflate(R.layout.spinner_spinner1_normal, parent, false);
+                convertView = LayoutInflater.from(context).inflate(R.layout.spinner_spinner1_normal, null);
+
+            }
+            if (data != null) {
+                String text = data.get(position).getName();
+                TextView tv = (TextView) convertView.findViewById(R.id.spinnerText);
+                tv.setText(text);
             }
 
-            if (data != null) {
-                //데이터세팅
-                String text = data.get(position).getName();
-                ((TextView) convertView.findViewById(R.id.spinnerText)).setText(text);
-            }
+
 
             return convertView;
         }
 
         @Override
         public View getDropDownView(int position, View convertView, ViewGroup parent) {
-            if (convertView == null) {
+            if(convertView==null){
                 convertView = inflater.inflate(R.layout.spinner_spinner1_dropdown, parent, false);
             }
 
-            //데이터세팅
-            String text = data.get(position).getName();
-            TextView tv  = ((TextView) convertView.findViewById(R.id.spinnerText));
-            tv.setText(text);
-            if (mDeviceUUID != "" && mDeviceUUID.equals(data.get(position).getUuid())) {
-               tv.setBackgroundColor(Color.parseColor("#C2C2C2"));
-//                System.out.println("!!!"+mDeviceUUID+"@@@"+data.get(position).getUuid());
+            if (data != null) {
+                //데이터세팅
+                String text = data.get(position).getName();
+                TextView tv = (TextView) convertView.findViewById(R.id.spinnerText);
+                tv.setText(text);
+
+                if(mDeviceUUID != "" && mDeviceUUID.equals(data.get(position).getUuid())){
+                    tv.setBackgroundColor(Color.parseColor("#C2C2C2"));
+                }else{
+                    tv.setBackgroundColor(Color.argb(0,0,0,0));
+                }
 
             }
-            System.out.println("DropDownPosition :"+position +"  UUID :"+data.get(position).getUuid());
 
             return convertView;
         }
+
+
+
 
         @Override
         public Object getItem(int position) {

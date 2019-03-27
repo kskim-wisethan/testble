@@ -14,18 +14,14 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <Spinner
-            android:id="@+id/ble_spinner"
-            android:layout_width="match_parent"
-            android:layout_height="40dp"
-            android:layout_margin="10dp" />
 
-        <LinearLayout
-            android:background="#353535"
-            android:layout_width="match_parent"
-            android:layout_height="0.5dp">
 
-        </LinearLayout>
+        <!--<LinearLayout-->
+            <!--android:background="#353535"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="0.5dp">-->
+
+        <!--</LinearLayout>-->
 
 
         <LinearLayout
@@ -34,6 +30,13 @@
             android:gravity="right"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
+
+            <Spinner
+                android:id="@+id/ble_spinner"
+                android:layout_weight="1"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_margin="10dp" />
             <Button
                 android:layout_marginRight="5dp"
                 android:id="@+id/read_bt"
@@ -42,6 +45,7 @@
                 android:layout_height="wrap_content"
                 android:text="read"/>
             <Button
+                android:visibility="gone"
                 android:layout_marginRight="5dp"
                 android:id="@+id/write_bt"
                 android:background="@drawable/button_background"
@@ -57,8 +61,7 @@
             android:layout_height="match_parent"
             android:addStatesFromChildren="false"
             android:gravity="top"
-            android:orientation="vertical"
-            android:padding="15dp">
+            android:orientation="vertical">
 
 
             <LinearLayout
@@ -96,6 +99,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="15sp"
                         android:gravity="center"
+                        android:textColor="#B70000"
                         android:text="0˚"
                         android:textSize="20dp"
                         android:textStyle="bold" />
@@ -134,6 +138,7 @@
                         android:gravity="center"
                         android:text="0 ppm"
                         android:textSize="20dp"
+                        android:textColor="#B70000"
                         android:textStyle="bold" />
 
                 </LinearLayout>
@@ -178,6 +183,7 @@
                         android:layout_marginBottom="15sp"
                         android:gravity="center"
                         android:text="0˚"
+                        android:textColor="#B70000"
                         android:textSize="20dp"
                         android:textStyle="bold" />
 
