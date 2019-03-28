@@ -70,6 +70,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private final String LIST_UUID = "UUID";
 
     private boolean mConnected = false;
+    private boolean mRegistered = false;
     private BleModel mModel;
 
     private int mServiceIndex = 0;
@@ -173,22 +174,29 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     @Override
     protected void onResume() {
         super.onResume();
-        registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
-        if (mBluetoothLeService != null) {
-            final boolean result = mBluetoothLeService.connect(mModel.getUuid());
-            Log.d(TAG, "Connect request result=" + result);
+        if (!mRegistered) {
+            registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
+            if (mBluetoothLeService != null) {
+                mRegistered = true;
+                final boolean result = mBluetoothLeService.connect(mModel.getUuid());
+                Log.d(TAG, "Connect request result=" + result);
+            }
         }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        unregisterReceiver(mGattUpdateReceiver);
+        //unregisterReceiver(mGattUpdateReceiver);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
+        unregisterReceiver(mGattUpdateReceiver);    //
+        mRegistered = false;
+
         unbindService(mServiceConnection);
         mBluetoothLeService = null;
     }
