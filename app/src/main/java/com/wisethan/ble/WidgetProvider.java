@@ -1,5 +1,6 @@
 package com.wisethan.ble;
 
+import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
@@ -31,6 +32,11 @@ public class WidgetProvider extends AppWidgetProvider {
     String temp ="";
     String humidity ="";
 
+    private static PendingIntent mSender;
+    private static AlarmManager mManager;
+
+    private static final int WIDGET_UPDATE_INTERVAL = 1800000;
+
     private  String PENDING_ACTION = "com.wisethan.ble.Pending_Action";
 
     @Override
@@ -46,6 +52,11 @@ public class WidgetProvider extends AppWidgetProvider {
 
 
         }else {
+            long firstTime = System.currentTimeMillis() + WIDGET_UPDATE_INTERVAL;
+            mSender = PendingIntent.getBroadcast(context, 0, intent, 0);
+            mManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+            mManager.set(AlarmManager.RTC, firstTime, mSender);
+
             SharedPreferences sharedPreferences = context.getSharedPreferences("SHARE_PREF",Context.MODE_PRIVATE);
             uuid = sharedPreferences.getString("uuid","!");
             co2 = sharedPreferences.getString("co2","!");
@@ -66,9 +77,13 @@ public class WidgetProvider extends AppWidgetProvider {
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
         appWidgetIds = appWidgetManager.getAppWidgetIds(new ComponentName(context, getClass()));
 
+        ((MainActivity)MainActivity.mcontext).DataSet();
+
+        System.out.println("Widget Update ok");
         for (int i = 0; i < appWidgetIds.length; i++) {
             updateAppWidget(context, appWidgetManager, appWidgetIds[i]);
         }
+
     }
 
     @Override
@@ -95,7 +110,6 @@ public class WidgetProvider extends AppWidgetProvider {
     }
 
     public void updateAppWidget(Context context, AppWidgetManager appWidgetManager,int appWidgetId) {
-
 
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
         views.setOnClickPendingIntent(R.id.refresh_iv, getPendingIntent(context, R.id.refresh_iv));

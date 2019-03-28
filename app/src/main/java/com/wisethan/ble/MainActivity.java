@@ -52,7 +52,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 
-public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener  {
+public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
     private static final String TAG = MainActivity.class.getSimpleName();
 
     Button scan_btn;
@@ -70,7 +70,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private final String LIST_UUID = "UUID";
 
     private boolean mConnected = false;
-    private boolean mRegistered = false;
     private BleModel mModel;
 
     private int mServiceIndex = 0;
@@ -144,7 +143,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         write_bt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getApplicationContext(),"Write ok",Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "Write ok", Toast.LENGTH_SHORT).show();
                 WriteToProperty();
             }
         });
@@ -164,7 +163,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         });
     }
 
-    public void  DataSet(){
+    public void DataSet() {
         mServiceIndex = 0;
         mCharacteristicIndex = 0;
         requestCharacteristicValue();
@@ -175,14 +174,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     @Override
     protected void onResume() {
         super.onResume();
-        if (!mRegistered) {
-            registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
-            if (mBluetoothLeService != null) {
-                mRegistered = true;
-                final boolean result = mBluetoothLeService.connect(mModel.getUuid());
-                Log.d(TAG, "Connect request result=" + result);
-            }
+        registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
+        if (mBluetoothLeService != null) {
+            final boolean result = mBluetoothLeService.connect(mModel.getUuid());
+            Log.d(TAG, "Connect request result=" + result);
         }
+
+
     }
 
     @Override
@@ -196,7 +194,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         super.onDestroy();
 
         unregisterReceiver(mGattUpdateReceiver);    //
-        mRegistered = false;
 
         unbindService(mServiceConnection);
         mBluetoothLeService = null;
@@ -319,10 +316,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        //Toast.makeText(this.getApplicationContext(), mDevices.get(position).getName(), Toast.LENGTH_SHORT).show();
 
-
-        Log.v("aaaaa", "position" + position);
         if (!mDevices.get(position).getUuid().equals("")) {
             mDeviceUUID = mDevices.get(position).getUuid();
         }
@@ -334,7 +328,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
 
 
-            SharedPreferences sharedPreferences = getSharedPreferences("SHARE_PREF",MODE_PRIVATE);
+            SharedPreferences sharedPreferences = getSharedPreferences("SHARE_PREF", MODE_PRIVATE);
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putString("uuid", mDeviceUUID);
             editor.commit();
@@ -400,7 +394,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
-            Toast.makeText(getApplicationContext(), "브로드캐스트", Toast.LENGTH_SHORT).show();
             if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
                 mConnected = true;
                 updateConnectionState(R.string.gatt_connected);
@@ -418,8 +411,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             }
         }
     };
-
-
 
 
     private void updateConnectionState(final int resourceId) {
@@ -451,30 +442,29 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 String characteristicValueHex = StringUtils.byteArrayInIntegerFormat(data);
                 characteristicValue += characteristicValueHex;
 
-                SharedPreferences sharedPreferences = getSharedPreferences("SHARE_PREF",MODE_PRIVATE);
+                SharedPreferences sharedPreferences = getSharedPreferences("SHARE_PREF", MODE_PRIVATE);
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putString("uuid", mDeviceUUID);
 
                 if (uuidString.compareTo(Constants.CUSTOM_CHARACTERISTIC1) == 0) {
                     // CO2
-                    mCO2Tv.setText(characteristicValueHex+" ppm");
+                    mCO2Tv.setText(characteristicValueHex + " ppm");
                     editor.putString("co2", characteristicValueHex);
 
                 } else if (uuidString.compareTo(Constants.CUSTOM_CHARACTERISTIC2) == 0) {
                     // Temperature
-                    mTempTv.setText(characteristicValueHex+"˚");
+                    mTempTv.setText(characteristicValueHex + "˚");
                     editor.putString("temp", characteristicValueHex);
 
                 } else if (uuidString.compareTo(Constants.CUSTOM_CHARACTERISTIC3) == 0) {
                     // Humidity
-                    mHumidityTv.setText(characteristicValueHex+"˚");
+                    mHumidityTv.setText(characteristicValueHex + "˚");
                     editor.putString("humidity", characteristicValueHex);
 
                 } else if (uuidString.compareTo(Constants.CUSTOM_CHARACTERISTIC4) == 0) {
                     // Update Period
 
                 }
-
 
 
                 editor.commit();
@@ -564,7 +554,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
     void requestCharacteristicValue() {
-        System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@");
         if (mGattCharacteristics != null) {
             final BluetoothGattCharacteristic characteristic = mGattCharacteristics.get(mServiceIndex).get(mCharacteristicIndex);
             final int charaProp = characteristic.getProperties();
@@ -625,13 +614,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             }
 
 
-
             return convertView;
         }
 
         @Override
         public View getDropDownView(int position, View convertView, ViewGroup parent) {
-            if(convertView==null){
+            if (convertView == null) {
                 convertView = inflater.inflate(R.layout.spinner_spinner1_dropdown, parent, false);
             }
 
@@ -641,18 +629,16 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 TextView tv = (TextView) convertView.findViewById(R.id.spinnerText);
                 tv.setText(text);
 
-                if(mDeviceUUID != "" && mDeviceUUID.equals(data.get(position).getUuid())){
+                if (mDeviceUUID != "" && mDeviceUUID.equals(data.get(position).getUuid())) {
                     tv.setBackgroundColor(Color.parseColor("#C2C2C2"));
-                }else{
-                    tv.setBackgroundColor(Color.argb(0,0,0,0));
+                } else {
+                    tv.setBackgroundColor(Color.argb(0, 0, 0, 0));
                 }
 
             }
 
             return convertView;
         }
-
-
 
 
         @Override
