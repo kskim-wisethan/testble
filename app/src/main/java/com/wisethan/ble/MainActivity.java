@@ -17,7 +17,6 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
-import android.provider.Settings;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -28,6 +27,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
@@ -79,10 +80,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     String pairingDevice = "";
     ArrayList<BleModel> mDevices = new ArrayList<BleModel>();
 
-    int mScanCount = 0;
-    String mOutput = "";
     String mDeviceUUID = "";
-    ArrayAdapter<String> mAdapter;
     BleManager mBleManager;
     AdapterSpinner1 adapterSpinner1;
     LocationManager locationManager;
@@ -131,9 +129,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         mItems.add("선택");
         mDevices.add(new BleModel());
-//        mAdapter = new ArrayAdapter<>(this.getApplicationContext(), android.R.layout.simple_spinner_item, mItems);
-//        mAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-//        ble_spinner.setOnItemSelectedListener(this);
 
         adapterSpinner1 = new AdapterSpinner1(this, mDevices, pairingDevice);
         ble_spinner.setAdapter(adapterSpinner1);
@@ -157,6 +152,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             @Override
             public void onClick(View v) {
                 Toast.makeText(MainActivity.this, "refresh", Toast.LENGTH_SHORT).show();
+                Animation anim = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.rotate_anim);
+                scan_btn.startAnimation(anim);
 
                 BLEscan();
             }
@@ -179,8 +176,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             final boolean result = mBluetoothLeService.connect(mModel.getUuid());
             Log.d(TAG, "Connect request result=" + result);
         }
-
-
     }
 
     @Override
@@ -194,7 +189,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         super.onDestroy();
 
         unregisterReceiver(mGattUpdateReceiver);    //
-
         unbindService(mServiceConnection);
         mBluetoothLeService = null;
     }
@@ -466,9 +460,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
                 }
 
-
                 editor.commit();
-
                 Intent intent = new Intent(MainActivity.this, WidgetProvider.class);
                 intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
                 MainActivity.this.sendBroadcast(intent);
@@ -599,9 +591,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-//            if (convertView == null) {
-//                convertView = inflater.inflate(R.layout.spinner_spinner1_normal, parent, false);
-//            }
 
             if (convertView == null) {
                 convertView = LayoutInflater.from(context).inflate(R.layout.spinner_spinner1_normal, null);
@@ -612,8 +601,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 TextView tv = (TextView) convertView.findViewById(R.id.spinnerText);
                 tv.setText(text);
             }
-
-
             return convertView;
         }
 

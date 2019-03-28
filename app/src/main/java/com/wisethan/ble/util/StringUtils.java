@@ -52,15 +52,6 @@ public class StringUtils {
 
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(valueString);
-        stringBuilder.append(" { ");
-        for (int i = 0; i < byteArray.length; i++) {
-            if (i > 0) {
-                stringBuilder.append(", ");
-            }
-            String hexString = byteToHex(byteArray[i]);
-            stringBuilder.append(hexString);
-        }
-        stringBuilder.append(" }");
 
         return stringBuilder.toString();
     }

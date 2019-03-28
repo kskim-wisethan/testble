@@ -8,6 +8,7 @@
     android:id="@+id/mLayout"
     android:background="@drawable/widget_background">
 
+
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
@@ -121,6 +122,7 @@
         android:layout_height="match_parent">
 
         <ImageView
+
             android:id="@+id/refresh_iv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

@@ -22,14 +22,13 @@
                 android:id="@+id/ble_scan_btn"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
-                android:layout_weight="1"
                 android:baselineAligned="false"
                 android:gravity="center|left" />
 
             <android.support.v7.widget.Toolbar
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
+                android:layout_height="50dp"
                 android:layout_weight="3"
                 android:background="?attr/colorPrimary"
                 android:gravity="center"

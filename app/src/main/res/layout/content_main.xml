@@ -20,7 +20,7 @@
         <LinearLayout
             android:paddingTop="10dp"
             android:paddingBottom="10dp"
-            android:background="#09C"
+            android:background="#0099FA"
             android:gravity="center"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">

@@ -4,26 +4,17 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
-import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattService;
-import android.content.BroadcastReceiver;
+
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
+import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.ImageView;
 import android.widget.RemoteViews;
-import android.widget.Toast;
 
-import com.wisethan.ble.service.BluetoothLeService;
-import com.wisethan.ble.util.Constants;
-
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
 
 public class WidgetProvider extends AppWidgetProvider {
 
@@ -46,11 +37,7 @@ public class WidgetProvider extends AppWidgetProvider {
         String action = intent.getAction();
 
         if(action.equals(PENDING_ACTION)){
-            Toast.makeText(context, "refresh_iv Click", Toast.LENGTH_SHORT).show();
-
             ((MainActivity)MainActivity.mcontext).DataSet();
-
-
         }else {
             long firstTime = System.currentTimeMillis() + WIDGET_UPDATE_INTERVAL;
             mSender = PendingIntent.getBroadcast(context, 0, intent, 0);
@@ -58,10 +45,10 @@ public class WidgetProvider extends AppWidgetProvider {
             mManager.set(AlarmManager.RTC, firstTime, mSender);
 
             SharedPreferences sharedPreferences = context.getSharedPreferences("SHARE_PREF",Context.MODE_PRIVATE);
-            uuid = sharedPreferences.getString("uuid","!");
-            co2 = sharedPreferences.getString("co2","!");
-            temp = sharedPreferences.getString("temp","!");
-            humidity = sharedPreferences.getString("humidity","!");
+            uuid = sharedPreferences.getString("uuid","0");
+            co2 = sharedPreferences.getString("co2","0");
+            temp = sharedPreferences.getString("temp","0");
+            humidity = sharedPreferences.getString("humidity","0");
 
             AppWidgetManager app = AppWidgetManager.getInstance(context);
             int ids[] = app.getAppWidgetIds(new ComponentName(context, this.getClass()));
