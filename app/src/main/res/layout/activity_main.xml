@@ -17,10 +17,11 @@
             android:orientation="horizontal">
 
             <Button
-                android:background="@drawable/refresh"
+                android:layout_gravity="center"
+                android:background="@drawable/refresh2"
                 android:id="@+id/ble_scan_btn"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
                 android:layout_weight="1"
                 android:baselineAligned="false"
                 android:gravity="center|left" />

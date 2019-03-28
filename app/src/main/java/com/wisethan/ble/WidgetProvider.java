@@ -104,9 +104,7 @@ public class WidgetProvider extends AppWidgetProvider {
         views.setTextViewText(R.id.co2_widget_tv, co2+" ppm");
 
         appWidgetManager.updateAppWidget(appWidgetId,views);
-
     }
-
 
 
 }

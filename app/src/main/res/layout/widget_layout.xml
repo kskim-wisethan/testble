@@ -37,6 +37,7 @@
                     android:textSize="14sp" />
 
                 <TextView
+                    android:textStyle="bold"
                     android:id="@+id/temp_widget_tv"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -75,6 +76,7 @@
                     android:layout_gravity="center|top"
                     android:layout_weight="1"
                     android:text="0 ppm"
+                    android:textStyle="bold"
                     android:textSize="14sp" />
 
             </LinearLayout>
@@ -107,6 +109,7 @@
                     android:layout_gravity="center|top"
                     android:layout_weight="1"
                     android:text="0˚"
+                    android:textStyle="bold"
                     android:textSize="14sp" />
 
             </LinearLayout>
@@ -122,8 +125,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:src="@drawable/refresh"
-            android:paddingRight="20dp"/>
+            android:src="@drawable/refresh"/>
 
 
     </LinearLayout>

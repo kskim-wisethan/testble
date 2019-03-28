@@ -167,6 +167,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         mServiceIndex = 0;
         mCharacteristicIndex = 0;
         requestCharacteristicValue();
+        Toast.makeText(getApplicationContext(), "Data Read", Toast.LENGTH_SHORT).show();
     }
 
 
@@ -391,7 +392,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
-
+            Toast.makeText(getApplicationContext(), "브로드캐스트", Toast.LENGTH_SHORT).show();
             if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
                 mConnected = true;
                 updateConnectionState(R.string.gatt_connected);
@@ -409,6 +410,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             }
         }
     };
+
+
+
 
     private void updateConnectionState(final int resourceId) {
         runOnUiThread(new Runnable() {
