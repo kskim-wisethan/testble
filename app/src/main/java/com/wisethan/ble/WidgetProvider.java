@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -25,34 +26,41 @@ import java.util.Locale;
 
 public class WidgetProvider extends AppWidgetProvider {
 
-    String uuid;
-    private int mServiceIndex = 0;
-    private int mCharacteristicIndex = 0;
+    String uuid ="";
+    String co2 ="";
+    String temp ="";
+    String humidity ="";
 
-    private final String LIST_NAME = "NAME";
-    private final String LIST_UUID = "UUID";
-
-    private BluetoothLeService mBluetoothLeService;
-    private ArrayList<ArrayList<BluetoothGattCharacteristic>> mGattCharacteristics;
-    private BluetoothGattCharacteristic mNotifyCharacteristic;
+    private  String PENDING_ACTION = "com.wisethan.ble.Pending_Action";
 
     @Override
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
-        SharedPreferences sharedPreferences = context.getSharedPreferences("SHARE_PREF",Context.MODE_PRIVATE);
-        uuid = sharedPreferences.getString("uuid","!");
-        AppWidgetManager app = AppWidgetManager.getInstance(context);
-        int ids[] = app.getAppWidgetIds(new ComponentName(context, this.getClass()));
-        for (int i = 0; i < ids.length; i++) {
-            updateAppWidget(context, app, ids[i]);
+
+        String action = intent.getAction();
+
+        if(action.equals(PENDING_ACTION)){
+            Toast.makeText(context, "refresh_iv Click", Toast.LENGTH_SHORT).show();
+
+            ((MainActivity)MainActivity.mcontext).DataSet();
+
+
+        }else {
+            SharedPreferences sharedPreferences = context.getSharedPreferences("SHARE_PREF",Context.MODE_PRIVATE);
+            uuid = sharedPreferences.getString("uuid","!");
+            co2 = sharedPreferences.getString("co2","!");
+            temp = sharedPreferences.getString("temp","!");
+            humidity = sharedPreferences.getString("humidity","!");
+
+            AppWidgetManager app = AppWidgetManager.getInstance(context);
+            int ids[] = app.getAppWidgetIds(new ComponentName(context, this.getClass()));
+            for (int i = 0; i < ids.length; i++) {
+                updateAppWidget(context, app, ids[i]);
+            }
         }
 
-        mServiceIndex = 0;
-        mCharacteristicIndex = 0;
-//        requestCharacteristicValue();
-
-
     }
+
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
@@ -78,74 +86,27 @@ public class WidgetProvider extends AppWidgetProvider {
         super.onDisabled(context);
     }
 
+
+    private PendingIntent getPendingIntent(Context context, int id) {
+        Intent intent = new Intent(context, WidgetProvider.class);
+        intent.setAction(PENDING_ACTION);
+        intent.putExtra("viewId", id);
+        return PendingIntent.getBroadcast(context, id, intent, 0);
+    }
+
     public void updateAppWidget(Context context, AppWidgetManager appWidgetManager,int appWidgetId) {
 
 
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
-//        views.setTextViewText(R.id.temp_widget_tv, uuid);
-//        Toast.makeText(context, "!!!"+uuid, Toast.LENGTH_SHORT).show();
+        views.setOnClickPendingIntent(R.id.refresh_iv, getPendingIntent(context, R.id.refresh_iv));
+        views.setTextViewText(R.id.temp_widget_tv, temp+"˚");
+        views.setTextViewText(R.id.humidity_widget_tv, humidity+"˚");
+        views.setTextViewText(R.id.co2_widget_tv, co2+" ppm");
 
         appWidgetManager.updateAppWidget(appWidgetId,views);
 
-
-
     }
 
-//    void requestCharacteristicValue() {
-//        if (mGattCharacteristics != null) {
-//            final BluetoothGattCharacteristic characteristic = mGattCharacteristics.get(mServiceIndex).get(mCharacteristicIndex);
-//            final int charaProp = characteristic.getProperties();
-//            if ((charaProp | BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
-//                if (mNotifyCharacteristic != null) {
-//                    mBluetoothLeService.setCharacteristicNotification(mNotifyCharacteristic, false);
-//                    mNotifyCharacteristic = null;
-//                }
-//                mBluetoothLeService.readCharacteristic(characteristic);
-//            }
-//            if ((charaProp | BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
-//                mNotifyCharacteristic = characteristic;
-//                mBluetoothLeService.setCharacteristicNotification(characteristic, true);
-//            }
-//        }
-//    }
-//
-//
-//    private void displayGattServices(List<BluetoothGattService> gattServices) {
-//        if (gattServices == null) {
-//            return;
-//        }
-//        String uuid = null;
-//
-//        String unknownServiceString = getResources().getString(R.string.unknown_service);
-//        String unknownCharaString = getResources().getString(R.string.unknown_characteristic);
-//        ArrayList<HashMap<String, String>> gattServiceData = new ArrayList<HashMap<String, String>>();
-//        ArrayList<ArrayList<HashMap<String, String>>> gattCharacteristicData = new ArrayList<ArrayList<HashMap<String, String>>>();
-//        mGattCharacteristics = new ArrayList<ArrayList<BluetoothGattCharacteristic>>();
-//
-//        for (BluetoothGattService gattService : gattServices) {
-//            HashMap<String, String> currentServiceData = new HashMap<String, String>();
-//            uuid = gattService.getUuid().toString();
-//            currentServiceData.put(LIST_NAME, Constants.lookup(uuid, unknownServiceString));
-//            currentServiceData.put(LIST_UUID, uuid);
-//            gattServiceData.add(currentServiceData);
-//
-//            ArrayList<HashMap<String, String>> gattCharacteristicGroupData = new ArrayList<HashMap<String, String>>();
-//            List<BluetoothGattCharacteristic> gattCharacteristics = gattService.getCharacteristics();
-//            ArrayList<BluetoothGattCharacteristic> charas = new ArrayList<BluetoothGattCharacteristic>();
-//
-//            // Loops through available Characteristics.
-//            for (BluetoothGattCharacteristic gattCharacteristic : gattCharacteristics) {
-//                charas.add(gattCharacteristic);
-//                HashMap<String, String> currentCharaData = new HashMap<String, String>();
-//                uuid = gattCharacteristic.getUuid().toString();
-//                currentCharaData.put(LIST_NAME, Constants.lookup(uuid, unknownCharaString));
-//                currentCharaData.put(LIST_UUID, uuid);
-//                gattCharacteristicGroupData.add(currentCharaData);
-//            }
-//            mGattCharacteristics.add(charas);
-//            gattCharacteristicData.add(gattCharacteristicGroupData);
-//        }
-//    }
 
 
 }

@@ -91,6 +91,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private ArrayList<ArrayList<BluetoothGattCharacteristic>> mGattCharacteristics;
     private BluetoothGattCharacteristic mNotifyCharacteristic;
 
+    public static Context mcontext;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -106,6 +108,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             intent.addCategory(Intent.CATEGORY_DEFAULT);
             startActivity(intent);
         }
+
+        mcontext = this;
 
         PermissionManager permissionManager = new PermissionManager(this);
         permissionManager.permissionCheck();
@@ -146,21 +150,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         read_bt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-                SharedPreferences sharedPreferences = getSharedPreferences("SHARE_PREF",MODE_PRIVATE);
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putString("uuid", mDeviceUUID);
-                editor.commit();
-
-                Intent intent = new Intent(MainActivity.this, WidgetProvider.class);
-                intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
-                MainActivity.this.sendBroadcast(intent);
-
-
-
-                mServiceIndex = 0;
-                mCharacteristicIndex = 0;
-                requestCharacteristicValue();
+                DataSet();
             }
         });
         scan_btn.setOnClickListener(new View.OnClickListener() {
@@ -172,6 +162,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             }
         });
     }
+
+    public void  DataSet(){
+        mServiceIndex = 0;
+        mCharacteristicIndex = 0;
+        requestCharacteristicValue();
+    }
+
 
     @Override
     protected void onResume() {
@@ -327,6 +324,16 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
             bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
 
+
+            SharedPreferences sharedPreferences = getSharedPreferences("SHARE_PREF",MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("uuid", mDeviceUUID);
+            editor.commit();
+
+            Intent intent = new Intent(MainActivity.this, WidgetProvider.class);
+            intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+            MainActivity.this.sendBroadcast(intent);
+
         }
 
 
@@ -384,6 +391,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
+
             if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
                 mConnected = true;
                 updateConnectionState(R.string.gatt_connected);
@@ -431,22 +439,37 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 String characteristicValueHex = StringUtils.byteArrayInIntegerFormat(data);
                 characteristicValue += characteristicValueHex;
 
+                SharedPreferences sharedPreferences = getSharedPreferences("SHARE_PREF",MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putString("uuid", mDeviceUUID);
+
                 if (uuidString.compareTo(Constants.CUSTOM_CHARACTERISTIC1) == 0) {
                     // CO2
                     mCO2Tv.setText(characteristicValueHex+" ppm");
+                    editor.putString("co2", characteristicValueHex);
 
                 } else if (uuidString.compareTo(Constants.CUSTOM_CHARACTERISTIC2) == 0) {
                     // Temperature
                     mTempTv.setText(characteristicValueHex+"˚");
+                    editor.putString("temp", characteristicValueHex);
 
                 } else if (uuidString.compareTo(Constants.CUSTOM_CHARACTERISTIC3) == 0) {
                     // Humidity
                     mHumidityTv.setText(characteristicValueHex+"˚");
+                    editor.putString("humidity", characteristicValueHex);
 
                 } else if (uuidString.compareTo(Constants.CUSTOM_CHARACTERISTIC4) == 0) {
                     // Update Period
 
                 }
+
+
+
+                editor.commit();
+
+                Intent intent = new Intent(MainActivity.this, WidgetProvider.class);
+                intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+                MainActivity.this.sendBroadcast(intent);
 
             } else if (StringUtils.checkString(data)) {
                 String characteristicValueString = StringUtils.stringFromBytes(data);
@@ -529,6 +552,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
     void requestCharacteristicValue() {
+        System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@");
         if (mGattCharacteristics != null) {
             final BluetoothGattCharacteristic characteristic = mGattCharacteristics.get(mServiceIndex).get(mCharacteristicIndex);
             final int charaProp = characteristic.getProperties();
@@ -554,7 +578,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         ArrayList<BleModel> data;
         String pairingDevice = "";
         LayoutInflater inflater;
-//    ArrayList<String> data;
 
 
         public AdapterSpinner1(Context context, ArrayList<BleModel> data, String pairingDevice) {
