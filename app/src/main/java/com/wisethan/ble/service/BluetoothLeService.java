@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 
-public class BluetoothLeService extends Service {
+public class BluetoothLeService extends Service {   // ble 값 받아오기
     private final static String TAG = BluetoothLeService.class.getSimpleName();
 
     private BluetoothManager mBluetoothManager;
@@ -49,7 +49,7 @@ public class BluetoothLeService extends Service {
     public final static UUID UUID_CUSTOM_CHARACTERISTIC4 = UUID.fromString(Constants.CUSTOM_CHARACTERISTIC4);
 
 
-    private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
+    private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {   //callback시 브로드캐스트 전송
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             String intentAction;

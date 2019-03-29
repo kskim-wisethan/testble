@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class BleManager {
+public class BleManager {  //ble 연결
     private static final String TAG = BleManager.class.getSimpleName();
 
     private static final int REQUEST_ENABLE_BT = 1;
@@ -64,7 +64,7 @@ public class BleManager {
         checkBleEnable();
     }
 
-    public void checkBleEnable() {
+    public void checkBleEnable() {   //블루투스 on/off 확인 후 off시 intent 보냄
         if (!mParent.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
             Toast.makeText(mParent, R.string.ble_not_supported, Toast.LENGTH_SHORT).show();
         } else {
@@ -80,7 +80,7 @@ public class BleManager {
         }
     }
 
-    private BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
+    private BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {  //ble 검색 될 때마다 callback하여 ble정보를 BleModel에 저장하고 onResponse로 보내줌
         @Override
         public void onLeScan(final BluetoothDevice device, final int rssi, final byte[] scanRecord) {
             mParent.runOnUiThread(new Runnable() {
@@ -118,7 +118,7 @@ public class BleManager {
         }
     };
 
-    public void scanBleDevice(final BleDeviceCallback callback) {
+    public void scanBleDevice(final BleDeviceCallback callback) {  //ble 스캔
         System.out.println("scanBleDevice");
         mDeviceCallback = callback;
         mHandler.postDelayed(new Runnable() {
