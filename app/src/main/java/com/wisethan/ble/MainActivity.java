@@ -12,26 +12,20 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -39,19 +33,15 @@ import android.widget.Toast;
 
 import com.wisethan.ble.model.BleModel;
 import com.wisethan.ble.service.BluetoothLeService;
+import com.wisethan.ble.util.AdapterSpinner1;
 import com.wisethan.ble.util.BleManager;
 import com.wisethan.ble.util.Constants;
 import com.wisethan.ble.util.PermissionManager;
 import com.wisethan.ble.util.StringUtils;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Properties;
 
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -66,6 +56,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     private static final int REQUEST_ENABLE_BT = 1;
     private static final int REQUEST_FINE_LOCATION = 2;
+    private boolean mBound = false;
+
 
     private final String LIST_NAME = "NAME";
     private final String LIST_UUID = "UUID";
@@ -114,7 +106,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         setSupportActionBar(toolbar);
 
         ble_spinner = findViewById(R.id.ble_spinner);
-
         scan_btn = findViewById(R.id.ble_scan_btn);
         mTempTv = findViewById(R.id.temp_tv);
         mCO2Tv = findViewById(R.id.co2_tv);
@@ -122,11 +113,16 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         write_bt = findViewById(R.id.write_bt);
         read_bt = findViewById(R.id.read_bt);
 
-        mBleManager = BleManager.getInstance(this);
-        BLEscan();
+        SharedPreferences sharedPreferences = getSharedPreferences("UUID", MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("uuid", "");
+        editor.commit();
 
         mItems.add("선택");
         mDevices.add(new BleModel());
+
+        mBleManager = BleManager.getInstance(this);
+        BLEscan();
 
         adapterSpinner1 = new AdapterSpinner1(this, mDevices, pairingDevice);
         ble_spinner.setAdapter(adapterSpinner1);
@@ -176,59 +172,14 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(mGattUpdateReceiver);
-        unbindService(mServiceConnection);
+        if(mBound){
+            unregisterReceiver(mGattUpdateReceiver);
+            unbindService(mServiceConnection);
+            mBound = false;
+        }
+        //unbindService(mServiceConnection);
         mBluetoothLeService = null;
     }
-
-    public void WriteToProperty() {
-        File file = new File(Environment.getDataDirectory() + "/data/" + getPackageName(), mDeviceUUID);
-
-        FileOutputStream fos = null;
-        try {
-            //property 파일이 없으면 생성
-            if (!file.exists()) {
-                file.createNewFile();
-            }
-
-            fos = new FileOutputStream(file);
-
-            //Property 데이터 저장
-            Properties props = new Properties();
-            props.setProperty("uuid", mDeviceUUID);   //(key , value) 로 저장
-            props.store(fos, "Property Test");
-
-            Log.d("prop", "write success");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }  //현재 사용하지 않음
-
-    public String ReadToProperty() {
-        //property 파일
-        File file = new File(Environment.getDataDirectory() + "/data/" + getPackageName(), mDeviceUUID);
-
-        if (!file.exists()) {
-            return "";
-        }
-
-        FileInputStream fis = null;
-        String data = "";
-        try {
-            fis = new FileInputStream(file);
-
-            //Property 데이터 읽기
-            Properties props = new Properties();
-            props.load(fis);
-            data = props.getProperty("uuid", "");  //(key , default value)
-
-            Log.d("prop", "read success");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return data;
-    } //현재 사용하지 않음
 
     public void BLEscan() {
         mBleManager.scanBleDevice(new BleManager.BleDeviceCallback() {   //블루투스 기기 검색할때마다 콜백함
@@ -302,12 +253,17 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             mModel = mDevices.get(position);
             Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
             bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+            DataSet();
+
+            SharedPreferences sharedPreferences = getSharedPreferences("UUID", MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("uuid", mDevices.get(position).getUuid());
+            editor.commit();
         }
     }
 
     @Override
     public void onNothingSelected(AdapterView<?> parent) {
-
     }
 
     @Override
@@ -321,14 +277,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                     // 취소 눌렀을 때
                 }
                 break;
-
             case REQUEST_FINE_LOCATION: //GPS 권한 허용시 받아오는 코드
                 if (resultCode == Activity.RESULT_OK) {
                     System.out.println("GPS ok");
                     Intent intent = new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
                     intent.addCategory(Intent.CATEGORY_DEFAULT);
                     startActivity(intent);
-
                 } else {
                     // 취소 눌렀을 때
                 }
@@ -345,11 +299,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 finish();
             }
             mBluetoothLeService.connect(mModel.getUuid());
+            mBound = true;
         }
 
         @Override
         public void onServiceDisconnected(ComponentName componentName) {
             mBluetoothLeService = null;
+            mBound = false;
         }
     };
 
@@ -357,6 +313,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
+
             if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
                 mConnected = true;
                 updateConnectionState(R.string.gatt_connected);
@@ -401,6 +358,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
             String uuidString = mGattCharacteristics.get(mServiceIndex).get(mCharacteristicIndex).getUuid().toString();
             String characteristicValue = "> " + Constants.lookup(uuidString, getString(R.string.unknown_characteristic)) + " : ";
+
             if (serviceName.compareTo("Custom Service") == 0) {
                 String characteristicValueHex = StringUtils.byteArrayInIntegerFormat(data);
                 characteristicValue += characteristicValueHex;
@@ -458,7 +416,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 }
             }
         }
-
         if (mServiceIndex >= 0 && mCharacteristicIndex >= 0) {
             requestCharacteristicValue();
         }
@@ -498,6 +455,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             mGattCharacteristics.add(charas);
             gattCharacteristicData.add(gattCharacteristicGroupData);
         }
+        DataSet();
     }
 
     private static IntentFilter makeGattUpdateIntentFilter() {
@@ -529,74 +487,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 mNotifyCharacteristic = characteristic;
                 mBluetoothLeService.setCharacteristicNotification(characteristic, true);
             }
-        }
-    }
-
-
-    public class AdapterSpinner1 extends BaseAdapter {
-        Context context;
-        ArrayList<BleModel> data;
-        String pairingDevice = "";
-        LayoutInflater inflater;
-
-        public AdapterSpinner1(Context context, ArrayList<BleModel> data, String pairingDevice) {
-            this.context = context;
-            this.data = data;
-            this.pairingDevice = pairingDevice;
-
-            inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        }
-
-        @Override
-        public int getCount() {
-            if (data != null) return data.size();
-            else return 0;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-
-            if (convertView == null) {
-                convertView = LayoutInflater.from(context).inflate(R.layout.spinner_spinner1_normal, null);
-
-            }
-            if (data != null) {
-                String text = data.get(position).getName();
-                TextView tv = (TextView) convertView.findViewById(R.id.spinnerText);
-                tv.setText(text);
-            }
-            return convertView;
-        }
-
-        @Override
-        public View getDropDownView(int position, View convertView, ViewGroup parent) {
-            if (convertView == null) {
-                convertView = inflater.inflate(R.layout.spinner_spinner1_dropdown, parent, false);
-            }
-
-            if (data != null) {
-                //데이터세팅
-                String text = data.get(position).getName();
-                TextView tv = (TextView) convertView.findViewById(R.id.spinnerText);
-                tv.setText(text);
-
-                if (mDeviceUUID != "" && mDeviceUUID.equals(data.get(position).getUuid())) {
-                    tv.setBackgroundColor(Color.parseColor("#C2C2C2"));
-                } else {
-                    tv.setBackgroundColor(Color.argb(0, 0, 0, 0));
-                }
-            }
-            return convertView;
-        }
-
-        @Override
-        public Object getItem(int position) {
-            return data.get(position);
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
         }
     }
 }

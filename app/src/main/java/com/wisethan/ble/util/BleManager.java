@@ -87,6 +87,9 @@ public class BleManager {  //ble 연결
                 @Override
                 public void run() {
 
+
+                    System.out.println("!!!!!!!!!!!!!!"+uuid.size()
+                    );
                     if(uuid.size()==0){
                         uuid.add(device.getAddress());
                     }else {
@@ -98,6 +101,7 @@ public class BleManager {  //ble 연결
                         }
 
                         if(overlap==false){
+
                             uuid.add(device.getAddress());
                             Map<String, Object> data = new HashMap<>();
                             data.put("uuid", device.getAddress());
@@ -107,9 +111,7 @@ public class BleManager {  //ble 연결
                             data.put("scan_record", StringUtils.byteArrayInHexFormat(scanRecord));
                             BleModel ble = new BleModel(data);
 
-
                             mDeviceCallback.onResponse(ble);
-
                         }
                         overlap=false;
                     }

@@ -2,7 +2,7 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="250dp"
+    android:layout_width="match_parent"
     android:layout_height="80dp"
     android:orientation="horizontal"
     android:id="@+id/mLayout"
@@ -44,7 +44,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center|top"
                     android:layout_weight="1"
-                    android:text="0˚"
+                    android:text="--˚"
                     android:textSize="14sp" />
 
             </LinearLayout>
@@ -67,7 +67,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:layout_weight="1"
-                    android:text="이산화탄소"
+                    android:text="CO2"
                     android:textSize="14sp" />
 
                 <TextView
@@ -76,7 +76,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center|top"
                     android:layout_weight="1"
-                    android:text="0 ppm"
+                    android:text="-- ppm"
                     android:textStyle="bold"
                     android:textSize="14sp" />
 
@@ -109,7 +109,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center|top"
                     android:layout_weight="1"
-                    android:text="0˚"
+                    android:text="--˚"
                     android:textStyle="bold"
                     android:textSize="14sp" />
 

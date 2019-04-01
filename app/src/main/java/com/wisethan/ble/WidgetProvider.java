@@ -25,10 +25,10 @@ public class WidgetProvider extends AppWidgetProvider {
 
     private static PendingIntent mSender;
     private static AlarmManager mManager;
-
-    private static final int WIDGET_UPDATE_INTERVAL = 1800000;   //30분마다 위젯 update해줌
-
     private String PENDING_ACTION = "com.wisethan.ble.Pending_Action";
+
+//    private static final int WIDGET_UPDATE_INTERVAL = 1800000;   //30분마다 위젯 update해줌
+    private static final int WIDGET_UPDATE_INTERVAL = 15000;
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -37,7 +37,6 @@ public class WidgetProvider extends AppWidgetProvider {
         String action = intent.getAction();
 
         if (action.equals(PENDING_ACTION)||action.equals("android.appwidget.action.APPWIDGET_UPDATE")) {  //30분마다 실행 or refresh 버튼 누를 때 실행
-
             long firstTime = System.currentTimeMillis() + WIDGET_UPDATE_INTERVAL;
             mSender = PendingIntent.getBroadcast(context, 0, intent, 0);
             mManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
@@ -49,14 +48,12 @@ public class WidgetProvider extends AppWidgetProvider {
             humidity = "--";
 
             ((MainActivity) MainActivity.mcontext).DataSet();  // MainActivity의 DataSet() 메서드를 실행시켜 ble값을 다시 받아옴
-
         } else { // ble 값을 받아 오고나서 실행
             SharedPreferences sharedPreferences = context.getSharedPreferences("SHARE_PREF", Context.MODE_PRIVATE);
             uuid = sharedPreferences.getString("uuid", "0");
             co2 = sharedPreferences.getString("co2", "0");
             temp = sharedPreferences.getString("temp", "0");
             humidity = sharedPreferences.getString("humidity", "0");
-
         }
         AppWidgetManager app = AppWidgetManager.getInstance(context);
         int ids[] = app.getAppWidgetIds(new ComponentName(context, this.getClass()));
@@ -93,7 +90,6 @@ public class WidgetProvider extends AppWidgetProvider {
         super.onDisabled(context);
     }
 
-
     private PendingIntent getPendingIntent(Context context, int id) {
         Intent intent = new Intent(context, WidgetProvider.class);
         intent.setAction(PENDING_ACTION);
@@ -102,7 +98,6 @@ public class WidgetProvider extends AppWidgetProvider {
     }
 
     public void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {  //위젯 내용을 update해주는 부분
-
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
         views.setOnClickPendingIntent(R.id.refresh_iv, getPendingIntent(context, R.id.refresh_iv));
         views.setTextViewText(R.id.temp_widget_tv, temp + "˚");
@@ -111,6 +106,4 @@ public class WidgetProvider extends AppWidgetProvider {
 
         appWidgetManager.updateAppWidget(appWidgetId, views);
     }
-
-
 }
