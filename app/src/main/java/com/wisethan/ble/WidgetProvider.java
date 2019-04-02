@@ -12,6 +12,8 @@ import android.content.SharedPreferences;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
+import com.wisethan.ble.service.BluetoothLeService;
+
 
 public class WidgetProvider extends AppWidgetProvider {
 
@@ -20,6 +22,7 @@ public class WidgetProvider extends AppWidgetProvider {
     String temp = "";
     String humidity = "";
 
+    BluetoothLeService ble ;
     private static PendingIntent mSender;
     private static AlarmManager mManager;
     private String PENDING_ACTION = "com.wisethan.ble.Pending_Action";
@@ -44,8 +47,10 @@ public class WidgetProvider extends AppWidgetProvider {
             humidity = "--";
 
             ((MainActivity) MainActivity.mcontext).DataSet();  // MainActivity의 DataSet() 메서드를 실행시켜 ble값을 다시 받아옴
-            Toast.makeText(context, "Read", Toast.LENGTH_SHORT).show();
-        } else if(action.equals(PENDING_ACTION)||action.equals("android.appwidget.action.APPWIDGET_BIND")){ // ble 값을 받아 오고나서 실행
+            if(action.equals(PENDING_ACTION)){
+                Toast.makeText(context, "Read", Toast.LENGTH_SHORT).show();
+            }
+        } else if(action.equals("android.appwidget.action.APPWIDGET_BIND")){ // ble 값을 받아 오고나서 실행
             SharedPreferences sharedPreferences = context.getSharedPreferences("SHARE_PREF", Context.MODE_PRIVATE);
             uuid = sharedPreferences.getString("uuid", "0");
             co2 = sharedPreferences.getString("co2", "0");

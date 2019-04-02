@@ -57,6 +57,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private static final int REQUEST_ENABLE_BT = 1;
     private static final int REQUEST_FINE_LOCATION = 2;
     private boolean mBound = false;
+    public int num =0;
+
 
     private final String LIST_NAME = "NAME";
     private final String LIST_UUID = "UUID";
@@ -288,8 +290,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             mHumidityTv.setText("--˚");
             mTempTv.setText("--˚");
             mCO2Tv.setText("-- ppm");
-        }else {
-            Toast.makeText(getApplicationContext(), "Read", Toast.LENGTH_SHORT).show();
         }
         if (position > 0) {
             SharedPreferences sharedPreferences = getSharedPreferences("UUID", MODE_PRIVATE);
@@ -301,6 +301,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
             DataSet();
             mBound = true;
+            Toast.makeText(getApplicationContext(), "Read", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -427,11 +428,14 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                     // Update Period
 
                 }
-
-                editor.commit();
-                Intent intent = new Intent(MainActivity.this, WidgetProvider.class);
-                intent.setAction(AppWidgetManager.ACTION_APPWIDGET_BIND);
-                MainActivity.this.sendBroadcast(intent);
+                num++;
+                if(num==4){
+                    editor.commit();
+                    Intent intent = new Intent(MainActivity.this, WidgetProvider.class);
+                    intent.setAction(AppWidgetManager.ACTION_APPWIDGET_BIND);
+                    MainActivity.this.sendBroadcast(intent);
+                    num=0;
+                }
 
             } else if (StringUtils.checkString(data)) {
                 String characteristicValueString = StringUtils.stringFromBytes(data);
