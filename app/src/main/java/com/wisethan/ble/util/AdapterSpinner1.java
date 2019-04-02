@@ -64,7 +64,7 @@ public class AdapterSpinner1 extends BaseAdapter {
             tv.setText(text);
 
             SharedPreferences sharedPreferences = context.getSharedPreferences("UUID", Context.MODE_PRIVATE);
-            uuid = sharedPreferences.getString("uuid", "0");
+            uuid = sharedPreferences.getString("uuid", "");
 
             if (uuid != "" && uuid.equals(data.get(position).getUuid())) {
                 tv.setBackgroundColor(Color.parseColor("#C2C2C2"));

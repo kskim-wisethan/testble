@@ -9,10 +9,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.view.View;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
-import android.widget.ImageView;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
@@ -34,7 +30,6 @@ public class WidgetProvider extends AppWidgetProvider {
     @Override
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
-
         String action = intent.getAction();
 
         if (action.equals(PENDING_ACTION)||action.equals("android.appwidget.action.APPWIDGET_UPDATE")) {  //30분마다 실행 or refresh 버튼 누를 때 실행
@@ -50,7 +45,7 @@ public class WidgetProvider extends AppWidgetProvider {
 
             ((MainActivity) MainActivity.mcontext).DataSet();  // MainActivity의 DataSet() 메서드를 실행시켜 ble값을 다시 받아옴
             Toast.makeText(context, "Read", Toast.LENGTH_SHORT).show();
-        } else { // ble 값을 받아 오고나서 실행
+        } else if(action.equals(PENDING_ACTION)||action.equals("android.appwidget.action.APPWIDGET_BIND")){ // ble 값을 받아 오고나서 실행
             SharedPreferences sharedPreferences = context.getSharedPreferences("SHARE_PREF", Context.MODE_PRIVATE);
             uuid = sharedPreferences.getString("uuid", "0");
             co2 = sharedPreferences.getString("co2", "0");

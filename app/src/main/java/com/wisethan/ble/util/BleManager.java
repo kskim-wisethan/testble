@@ -13,6 +13,7 @@ import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.wisethan.ble.MainActivity;
 import com.wisethan.ble.R;
 import com.wisethan.ble.model.BleModel;
 
@@ -28,7 +29,7 @@ public class BleManager {  //ble 연결
 
     boolean overlap = false;
 
-    ArrayList<String> uuid = new ArrayList<String>();
+    ArrayList<String> uuid = ((MainActivity)MainActivity.mcontext).uuid;
     private boolean mScanning = false;
     private Handler mHandler = new Handler();
 

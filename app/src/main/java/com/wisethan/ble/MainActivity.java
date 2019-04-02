@@ -58,7 +58,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private static final int REQUEST_FINE_LOCATION = 2;
     private boolean mBound = false;
 
-
     private final String LIST_NAME = "NAME";
     private final String LIST_UUID = "UUID";
 
@@ -70,6 +69,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private int mServiceIndex = 0;
     private int mCharacteristicIndex = 0;
 
+    public ArrayList<String> uuid = new ArrayList<String>();
     ArrayList<String> mItems = new ArrayList<String>();
     String pairingDevice = "";
     ArrayList<BleModel> mDevices = new ArrayList<BleModel>();
@@ -147,9 +147,36 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 Toast.makeText(MainActivity.this, "refresh", Toast.LENGTH_SHORT).show();
                 Animation anim = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.rotate_anim);
                 scan_btn.startAnimation(anim);
-                BLEscan();
+
+                mBound = false;
+                try{
+                    unbindService(mServiceConnection);
+                }catch (Exception e){
+                    scan();
+                }
+                scan();
             }
         });
+    }
+
+    public void scan(){
+        uuid.clear();
+        mItems.clear();
+        mDevices.clear();
+        mItems.add("선택");
+        mDevices.add(new BleModel());
+        ble_spinner.setSelection(0);
+        mHumidityTv.setText("--˚");
+        mTempTv.setText("--˚");
+        mCO2Tv.setText("-- ppm");
+        SharedPreferences sharedPreferences = getSharedPreferences("UUID", MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("uuid", "");
+        editor.commit();
+        BLEscan();
+        Intent intent = new Intent(MainActivity.this, WidgetProvider.class);
+        intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+        MainActivity.this.sendBroadcast(intent);
     }
 
     public void DataSet() { //연결된 블루투스의 데이터 가져오기
@@ -255,17 +282,20 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         }
         if(mBound){
             unbindService(mServiceConnection);
-            SharedPreferences sharedPreferences = getSharedPreferences("UUID", MODE_PRIVATE);
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.commit();
             Intent intent = new Intent(MainActivity.this, WidgetProvider.class);
             intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
             MainActivity.this.sendBroadcast(intent);
             mHumidityTv.setText("--˚");
             mTempTv.setText("--˚");
             mCO2Tv.setText("-- ppm");
+        }else {
+            Toast.makeText(getApplicationContext(), "Read", Toast.LENGTH_SHORT).show();
         }
         if (position > 0) {
+            SharedPreferences sharedPreferences = getSharedPreferences("UUID", MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("uuid", mDeviceUUID);
+            editor.commit();
             mModel = mDevices.get(position);
             Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
             bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
@@ -377,8 +407,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 SharedPreferences sharedPreferences = getSharedPreferences("SHARE_PREF", MODE_PRIVATE);
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putString("uuid", mDeviceUUID);
-
-                System.out.println("!!!!!!!!!!!!!"+mModel.getUuid());
 
                 if (uuidString.compareTo(Constants.CUSTOM_CHARACTERISTIC1) == 0) {
                     // CO2
@@ -514,7 +542,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             System.exit(0);
             return;
         }
-        //'뒤로' 버튼 한번 클릭 시 메시지
         Toast.makeText(this, "'뒤로' 버튼을 한번 더 누르시면 앱이 종료됩니다.", Toast.LENGTH_SHORT).show();
         //lastTimeBackPressed에 '뒤로'버튼이 눌린 시간을 기록
         lastTimeBackPressed = System.currentTimeMillis();
