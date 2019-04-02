@@ -64,6 +64,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     private boolean mConnected = false;
     private BleModel mModel;
+    private long lastTimeBackPressed;
+
 
     private int mServiceIndex = 0;
     private int mCharacteristicIndex = 0;
@@ -117,6 +119,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString("uuid", "");
         editor.commit();
+        Intent intent = new Intent(MainActivity.this, WidgetProvider.class);
+        intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+        MainActivity.this.sendBroadcast(intent);
 
         mItems.add("선택");
         mDevices.add(new BleModel());
@@ -133,6 +138,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             @Override
             public void onClick(View v) {
                 DataSet();
+                Toast.makeText(getApplicationContext(), "Read", Toast.LENGTH_SHORT).show();
             }
         });
         scan_btn.setOnClickListener(new View.OnClickListener() {
@@ -150,9 +156,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         mServiceIndex = 0;
         mCharacteristicIndex = 0;
         requestCharacteristicValue();
-        Toast.makeText(getApplicationContext(), "Data Read", Toast.LENGTH_SHORT).show();
     }
-
 
     @Override
     protected void onResume() {
@@ -172,8 +176,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        unregisterReceiver(mGattUpdateReceiver);
         if(mBound){
-            unregisterReceiver(mGattUpdateReceiver);
             unbindService(mServiceConnection);
             mBound = false;
         }
@@ -249,16 +253,24 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         if (!mDevices.get(position).getUuid().equals("")) {
             mDeviceUUID = mDevices.get(position).getUuid();
         }
+        if(mBound){
+            unbindService(mServiceConnection);
+            SharedPreferences sharedPreferences = getSharedPreferences("UUID", MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.commit();
+            Intent intent = new Intent(MainActivity.this, WidgetProvider.class);
+            intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+            MainActivity.this.sendBroadcast(intent);
+            mHumidityTv.setText("--˚");
+            mTempTv.setText("--˚");
+            mCO2Tv.setText("-- ppm");
+        }
         if (position > 0) {
             mModel = mDevices.get(position);
             Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
             bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
             DataSet();
-
-            SharedPreferences sharedPreferences = getSharedPreferences("UUID", MODE_PRIVATE);
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString("uuid", mDevices.get(position).getUuid());
-            editor.commit();
+            mBound = true;
         }
     }
 
@@ -293,6 +305,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private final ServiceConnection mServiceConnection = new ServiceConnection() {  //블루투스 연결하는 부분
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder service) {
+
             mBluetoothLeService = ((BluetoothLeService.LocalBinder) service).getService();
             if (!mBluetoothLeService.initialize()) {
                 Log.e(TAG, "Unable to initialize Bluetooth");
@@ -313,7 +326,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
-
             if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
                 mConnected = true;
                 updateConnectionState(R.string.gatt_connected);
@@ -331,7 +343,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             }
         }
     };
-
 
     private void updateConnectionState(final int resourceId) {
         runOnUiThread(new Runnable() {
@@ -366,6 +377,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 SharedPreferences sharedPreferences = getSharedPreferences("SHARE_PREF", MODE_PRIVATE);
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putString("uuid", mDeviceUUID);
+
+                System.out.println("!!!!!!!!!!!!!"+mModel.getUuid());
 
                 if (uuidString.compareTo(Constants.CUSTOM_CHARACTERISTIC1) == 0) {
                     // CO2
@@ -488,5 +501,22 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 mBluetoothLeService.setCharacteristicNotification(characteristic, true);
             }
         }
+    }
+
+    @Override
+    public void onBackPressed()
+    {
+        //2초 이내에 뒤로가기 버튼을 재 클릭 시 앱 종료
+        if (System.currentTimeMillis() - lastTimeBackPressed < 2000)
+        {
+            finishAffinity();
+            System.runFinalization();
+            System.exit(0);
+            return;
+        }
+        //'뒤로' 버튼 한번 클릭 시 메시지
+        Toast.makeText(this, "'뒤로' 버튼을 한번 더 누르시면 앱이 종료됩니다.", Toast.LENGTH_SHORT).show();
+        //lastTimeBackPressed에 '뒤로'버튼이 눌린 시간을 기록
+        lastTimeBackPressed = System.currentTimeMillis();
     }
 }

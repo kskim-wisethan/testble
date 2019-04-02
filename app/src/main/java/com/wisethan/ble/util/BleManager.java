@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.le.BluetoothLeScanner;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Handler;
@@ -23,29 +24,17 @@ public class BleManager {  //ble 연결
     private static final String TAG = BleManager.class.getSimpleName();
 
     private static final int REQUEST_ENABLE_BT = 1;
-    private static final int REQUEST_FINE_LOCATION = 2;
     private static final long SCAN_PERIOD = 10000;
 
-    private BluetoothGatt mBluetoothGatt;
-
-
-
-
-
     boolean overlap = false;
-    private final String LIST_NAME = "NAME";
-    private final String LIST_UUID = "UUID";
 
     ArrayList<String> uuid = new ArrayList<String>();
     private boolean mScanning = false;
-    private boolean mConnected = false;
-    private String mDeviceAddress = "";
     private Handler mHandler = new Handler();
 
     private Activity mParent;
     private BluetoothAdapter mBluetoothAdapter;
     private BleDeviceCallback mDeviceCallback;
-
 
     private static BleManager mInstance;
     public static BleManager getInstance(Activity parent) {
@@ -75,7 +64,6 @@ public class BleManager {  //ble 연결
             if (!mBluetoothAdapter.isEnabled()) {
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 mParent.startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-
             }
         }
     }
@@ -87,9 +75,6 @@ public class BleManager {  //ble 연결
                 @Override
                 public void run() {
 
-
-                    System.out.println("!!!!!!!!!!!!!!"+uuid.size()
-                    );
                     if(uuid.size()==0){
                         uuid.add(device.getAddress());
                     }else {
@@ -101,7 +86,6 @@ public class BleManager {  //ble 연결
                         }
 
                         if(overlap==false){
-
                             uuid.add(device.getAddress());
                             Map<String, Object> data = new HashMap<>();
                             data.put("uuid", device.getAddress());
