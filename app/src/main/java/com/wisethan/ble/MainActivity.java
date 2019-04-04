@@ -117,6 +117,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         write_bt = findViewById(R.id.write_bt);
         read_bt = findViewById(R.id.read_bt);
 
+
+
         SharedPreferences sharedPreferences = getSharedPreferences("UUID", MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString("uuid", "");
@@ -136,6 +138,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         adapterSpinner1.notifyDataSetChanged();
 
         ble_spinner.setOnItemSelectedListener(this);
+
         read_bt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -190,9 +193,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     @Override
     protected void onResume() {
         super.onResume();
-        registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
+//        registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
         if (mBluetoothLeService != null) {
-            final boolean result = mBluetoothLeService.connect(mModel.getUuid());
+            final boolean result;
+            result = mBluetoothLeService.connect(mModel.getUuid());
             Log.d(TAG, "Connect request result=" + result);
         }
     }
@@ -283,11 +287,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             mDeviceUUID = mDevices.get(position).getUuid();
         }
         if(mBound){
+
             unbindService(mServiceConnection);
             Intent intent = new Intent(MainActivity.this, WidgetProvider.class);
             intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
             MainActivity.this.sendBroadcast(intent);
-            mHumidityTv.setText("--˚");
+            mHumidityTv.setText("--%");
             mTempTv.setText("--˚");
             mCO2Tv.setText("-- ppm");
         }
@@ -353,7 +358,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         }
     };
 
-    private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
+    public final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
@@ -405,7 +410,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 String characteristicValueHex = StringUtils.byteArrayInIntegerFormat(data);
                 characteristicValue += characteristicValueHex;
 
-                SharedPreferences sharedPreferences = getSharedPreferences("SHARE_PREF", MODE_PRIVATE);
+                SharedPreferences sharedPreferences = getSharedPreferences("SHARE_PREF1", MODE_PRIVATE);
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putString("uuid", mDeviceUUID);
 
@@ -421,16 +426,16 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
                 } else if (uuidString.compareTo(Constants.CUSTOM_CHARACTERISTIC3) == 0) {
                     // Humidity
-                    mHumidityTv.setText(characteristicValueHex + "˚");
+                    mHumidityTv.setText(characteristicValueHex + "%");
                     editor.putString("humidity", characteristicValueHex);
 
                 } else if (uuidString.compareTo(Constants.CUSTOM_CHARACTERISTIC4) == 0) {
                     // Update Period
 
                 }
+                editor.commit();
                 num++;
                 if(num==4){
-                    editor.commit();
                     Intent intent = new Intent(MainActivity.this, WidgetProvider.class);
                     intent.setAction(AppWidgetManager.ACTION_APPWIDGET_BIND);
                     MainActivity.this.sendBroadcast(intent);

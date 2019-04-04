@@ -26,18 +26,19 @@
             android:layout_height="wrap_content">
 
             <Spinner
-
                 android:id="@+id/ble_spinner"
                 android:layout_weight="1"
                 android:layout_width="match_parent"
                 android:layout_height="40dp" />
             <Button
+                android:textAllCaps="false"
                 android:layout_marginRight="10dp"
                 android:id="@+id/read_bt"
                 android:background="@drawable/button_background"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="read"/>
+                android:text="Read"/>
+
             <Button
                 android:visibility="gone"
                 android:layout_marginRight="5dp"
@@ -184,7 +185,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="15sp"
                         android:gravity="center"
-                        android:text="--˚"
+                        android:text="--%"
                         android:textColor="#B70000"
                         android:textSize="20dp"
                         android:textStyle="bold" />
