@@ -49,7 +49,6 @@ public class WidgetProvider extends AppWidgetProvider {
     private static PendingIntent mSender;
     private static AlarmManager mManager;
     private String PENDING_ACTION = "com.wisethan.ble.Pending_Action";
-    private String TEST_ACTION = "com.wisethan.ble.Test_Action";
 
     private static final int WIDGET_UPDATE_INTERVAL = 1800000;   //30분마다 위젯 update해줌
 //    private static final int WIDGET_UPDATE_INTERVAL = 15000;
@@ -58,7 +57,6 @@ public class WidgetProvider extends AppWidgetProvider {
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
         String action = intent.getAction();
-        System.out.println("!!!"+action);
         con=context;
         if (action.equals(PENDING_ACTION) || action.equals("android.appwidget.action.APPWIDGET_UPDATE")) {  //30분마다 실행 or refresh 버튼 누를 때 실행
             long firstTime = System.currentTimeMillis() + WIDGET_UPDATE_INTERVAL;
@@ -66,20 +64,22 @@ public class WidgetProvider extends AppWidgetProvider {
             mManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
             mManager.set(AlarmManager.RTC, firstTime, mSender);
 
-            uuid = null;
             co2 = "--";
             temp = "--";
             humidity = "--";
 
-            refresh(con);
 
-            if (action.equals(PENDING_ACTION)) {
-                Toast.makeText(context, "Read", Toast.LENGTH_SHORT).show();
-                Intent gattServiceIntent = new Intent(context.getApplicationContext(), BluetoothLeService.class);
-                context.getApplicationContext().bindService(gattServiceIntent, mServiceConnection, context.getApplicationContext().BIND_AUTO_CREATE);
-                context.getApplicationContext().registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
-            }
-        } else if (action.equals("android.appwidget.action.APPWIDGET_BIND")) { // ble 값을 받아 오고나서 실행
+            SharedPreferences sharedPreferences = context.getSharedPreferences("Broadcast", Context.MODE_PRIVATE);  // 메인의 브로드캐스트와 구별을 위해 key"broad" value"widget"을 저장함
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("broad", "widget");
+            editor.commit();
+            Toast.makeText(context, "Read", Toast.LENGTH_SHORT).show();
+            Intent gattServiceIntent = new Intent(context.getApplicationContext(), BluetoothLeService.class);   //ble 연결 후 데이터 받아오기 시작
+            context.getApplicationContext().bindService(gattServiceIntent, mServiceConnection, context.getApplicationContext().BIND_AUTO_CREATE);
+            context.getApplicationContext().registerReceiver(mGattUpdateReceiver1, makeGattUpdateIntentFilter());
+
+            refresh(con);
+        } else if (action.equals("android.appwidget.action.APPWIDGET_BIND")) { // MainActivity에서 ble 값을 받아 오고나서 실행
             SharedPreferences sharedPreferences = context.getSharedPreferences("SHARE_PREF1", Context.MODE_PRIVATE);
             uuid = sharedPreferences.getString("uuid", null);
             co2 = sharedPreferences.getString("co2", "0");
@@ -87,8 +87,6 @@ public class WidgetProvider extends AppWidgetProvider {
             humidity = sharedPreferences.getString("humidity", "0");
             Toast.makeText(context, "Data Set", Toast.LENGTH_SHORT).show();
             refresh(con);
-        }else if (action.equals(TEST_ACTION)){
-            DataSet();
         }
     }
 
@@ -124,7 +122,6 @@ public class WidgetProvider extends AppWidgetProvider {
         int ids[] = app.getAppWidgetIds(new ComponentName(context, this.getClass()));
         for (int i = 0; i < ids.length; i++) {
             RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
-            views.setOnClickPendingIntent(R.id.test, testIntent(context.getApplicationContext(), R.id.test));
             views.setOnClickPendingIntent(R.id.refresh_iv, getPendingIntent(context.getApplicationContext(), R.id.refresh_iv));
             views.setTextViewText(R.id.temp_widget_tv, temp + "˚");
             views.setTextViewText(R.id.humidity_widget_tv, humidity + "%");
@@ -139,31 +136,23 @@ public class WidgetProvider extends AppWidgetProvider {
         intent.putExtra("viewId", id);
         return PendingIntent.getBroadcast(context, id, intent, 0);
     }
-    private PendingIntent testIntent(Context context, int id) {
-        Intent intent = new Intent(context, WidgetProvider.class);
-        intent.setAction(TEST_ACTION);
-        intent.putExtra("viewId", id);
-        return PendingIntent.getBroadcast(context, id, intent, 0);
-    }
 
     private static IntentFilter makeGattUpdateIntentFilter() {
         final IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
-        intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED_WIDGET);
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED_WIDGET);
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED_WIDGET);
+        intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE_WIDGET);
         return intentFilter;
     }
 
     public void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {  //위젯 내용을 update해주는 부분
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
         views.setOnClickPendingIntent(R.id.refresh_iv, getPendingIntent(context.getApplicationContext(), R.id.refresh_iv));
-        views.setOnClickPendingIntent(R.id.test, testIntent(context.getApplicationContext(), R.id.test));
         views.setTextViewText(R.id.temp_widget_tv, temp + "˚");
         views.setTextViewText(R.id.humidity_widget_tv, humidity + "%");
         views.setTextViewText(R.id.co2_widget_tv, co2 + " ppm");
         con = context;
-
         appWidgetManager.updateAppWidget(appWidgetId, views);
     }
 
@@ -175,8 +164,6 @@ public class WidgetProvider extends AppWidgetProvider {
 
     void requestCharacteristicValue() {  //ble 특성이 변화 될 때 처리하기위함
         if (mGattCharacteristics != null) {
-            System.out.println("!!!requestCharacteristicValue");
-
             final BluetoothGattCharacteristic characteristic = mGattCharacteristics.get(mServiceIndex).get(mCharacteristicIndex);
             final int charaProp = characteristic.getProperties();
             if ((charaProp | BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
@@ -198,10 +185,19 @@ public class WidgetProvider extends AppWidgetProvider {
         public void onServiceConnected(ComponentName componentName, IBinder service) {
 
             mBluetoothLeService = ((BluetoothLeService.LocalBinder) service).getService();
+            mBluetoothLeService.disconnect();
+            mBluetoothLeService = ((BluetoothLeService.LocalBinder) service).getService();
+
             if (!mBluetoothLeService.initialize()) {
                 //finish();
             }
-            mBluetoothLeService.connect("C4:64:E3:F0:2E:65");
+
+            SharedPreferences sharedPreferences = con.getSharedPreferences("SHARE_PREF1", Context.MODE_PRIVATE); //마지막에 연결된 uuid값을 가져와서 ble 연결시킴
+            uuid = sharedPreferences.getString("uuid", null);
+
+            if(uuid!=null){
+                mBluetoothLeService.connect(uuid);
+            }
         }
 
         @Override
@@ -211,17 +207,20 @@ public class WidgetProvider extends AppWidgetProvider {
     };
 
 
-    public final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
+    public final BroadcastReceiver mGattUpdateReceiver1 = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            final String action = intent.getAction();
+            try{
+                final String action = intent.getAction();
+                if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED_WIDGET.equals(action)) {
+                    displayGattServices(mBluetoothLeService.getSupportedGattServices());
+                } else if (BluetoothLeService.ACTION_DATA_AVAILABLE_WIDGET.equals(action)) {
+                    displayData(intent.getByteArrayExtra(BluetoothLeService.EXTRA_DATA_BYTES_WIDGET));
+                }
+            }catch (Exception e){
 
-            System.out.println("!!!" + action);
-            if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
-                displayGattServices(mBluetoothLeService.getSupportedGattServices());
-            } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
-                displayData(intent.getByteArrayExtra(BluetoothLeService.EXTRA_DATA_BYTES));
             }
+
         }
     };
 
@@ -280,17 +279,12 @@ public class WidgetProvider extends AppWidgetProvider {
 
                 if (uuidString.compareTo(Constants.CUSTOM_CHARACTERISTIC1) == 0) {
                     co2 = characteristicValueHex;
-
-
                 } else if (uuidString.compareTo(Constants.CUSTOM_CHARACTERISTIC2) == 0) {
                     temp = characteristicValueHex;
-
                 } else if (uuidString.compareTo(Constants.CUSTOM_CHARACTERISTIC3) == 0) {
                     humidity = characteristicValueHex;
-
                 } else if (uuidString.compareTo(Constants.CUSTOM_CHARACTERISTIC4) == 0) {
                     // Update Period
-
                 }
 
                 num++;

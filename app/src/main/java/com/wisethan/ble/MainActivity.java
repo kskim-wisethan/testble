@@ -123,9 +123,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString("uuid", "");
         editor.commit();
-        Intent intent = new Intent(MainActivity.this, WidgetProvider.class);
-        intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
-        MainActivity.this.sendBroadcast(intent);
 
         mItems.add("선택");
         mDevices.add(new BleModel());
@@ -142,6 +139,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         read_bt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                SharedPreferences sharedPreferences = getSharedPreferences("Broadcast", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putString("broad", "main");
+                editor.commit();
                 DataSet();
                 Toast.makeText(getApplicationContext(), "Read", Toast.LENGTH_SHORT).show();
             }
@@ -179,9 +180,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         editor.putString("uuid", "");
         editor.commit();
         BLEscan();
-        Intent intent = new Intent(MainActivity.this, WidgetProvider.class);
-        intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
-        MainActivity.this.sendBroadcast(intent);
     }
 
     public void DataSet() { //연결된 블루투스의 데이터 가져오기
@@ -193,7 +191,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     @Override
     protected void onResume() {
         super.onResume();
-//        registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
+        registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
         if (mBluetoothLeService != null) {
             final boolean result;
             result = mBluetoothLeService.connect(mModel.getUuid());
@@ -287,20 +285,20 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             mDeviceUUID = mDevices.get(position).getUuid();
         }
         if(mBound){
-
             unbindService(mServiceConnection);
-            Intent intent = new Intent(MainActivity.this, WidgetProvider.class);
-            intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
-            MainActivity.this.sendBroadcast(intent);
             mHumidityTv.setText("--%");
             mTempTv.setText("--˚");
             mCO2Tv.setText("-- ppm");
         }
         if (position > 0) {
-            SharedPreferences sharedPreferences = getSharedPreferences("UUID", MODE_PRIVATE);
+            SharedPreferences sharedPreferences = getSharedPreferences("Broadcast", Context.MODE_PRIVATE);  // widget의 브로드캐스트와 구별을 위해 key"broad" value"main"을 저장함
             SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString("uuid", mDeviceUUID);
+            editor.putString("broad", "main");
             editor.commit();
+            SharedPreferences sharedPreferences1 = getSharedPreferences("UUID", MODE_PRIVATE); //선택된 스피너의 색상을 바꿔주기 위해 uuid값을 저장해서 스피너에서 사용함
+            SharedPreferences.Editor editor1 = sharedPreferences1.edit();
+            editor1.putString("uuid", mDeviceUUID);
+            editor1.commit();
             mModel = mDevices.get(position);
             Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
             bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
@@ -361,21 +359,26 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     public final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            final String action = intent.getAction();
-            if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
-                mConnected = true;
-                updateConnectionState(R.string.gatt_connected);
-                invalidateOptionsMenu();
-            } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
-                mConnected = false;
-                updateConnectionState(R.string.gatt_disconnected);
-                invalidateOptionsMenu();
-                clearUI();
-            } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
-                displayGattServices(mBluetoothLeService.getSupportedGattServices());
-            } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
-                displayData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
-                displayData(intent.getByteArrayExtra(BluetoothLeService.EXTRA_DATA_BYTES));
+            try{
+                final String action = intent.getAction();
+                if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
+                    mConnected = true;
+                    updateConnectionState(R.string.gatt_connected);
+                    invalidateOptionsMenu();
+                } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
+                    mConnected = false;
+                    updateConnectionState(R.string.gatt_disconnected);
+                    invalidateOptionsMenu();
+                    clearUI();
+                } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
+                    if(mBluetoothLeService!=null){
+                        displayGattServices(mBluetoothLeService.getSupportedGattServices());
+                    }
+                } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
+                    displayData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
+                    displayData(intent.getByteArrayExtra(BluetoothLeService.EXTRA_DATA_BYTES));
+                }
+            }catch (Exception e){
             }
         }
     };
