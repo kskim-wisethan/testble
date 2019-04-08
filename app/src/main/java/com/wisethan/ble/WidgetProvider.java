@@ -148,7 +148,12 @@ public class WidgetProvider extends AppWidgetProvider {
 
     public void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {  //위젯 내용을 update해주는 부분
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
-        views.setOnClickPendingIntent(R.id.refresh_iv, getPendingIntent(context.getApplicationContext(), R.id.refresh_iv));
+        views.setOnClickPendingIntent(R.id.refresh_iv, getPendingIntent(context.getApplicationContext(), R.id.refresh_iv));Intent intent = new Intent();
+
+        Intent intent1 = new Intent(context, MainActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent1, 0);
+        views.setOnClickPendingIntent(R.id.intentLL, pendingIntent);
+
         views.setTextViewText(R.id.temp_widget_tv, temp + "˚");
         views.setTextViewText(R.id.humidity_widget_tv, humidity + "%");
         views.setTextViewText(R.id.co2_widget_tv, co2 + " ppm");
@@ -193,7 +198,7 @@ public class WidgetProvider extends AppWidgetProvider {
 
                 SharedPreferences sharedPreferences = con.getSharedPreferences("SHARE_PREF1", Context.MODE_PRIVATE); //마지막에 연결된 uuid값을 가져와서 ble 연결시킴
                 uuid = sharedPreferences.getString("uuid", null);
-
+                Toast.makeText(mBluetoothLeService, uuid, Toast.LENGTH_SHORT).show();
                 if(uuid!=null){
                     mBluetoothLeService.connect(uuid);
                 }
@@ -213,7 +218,6 @@ public class WidgetProvider extends AppWidgetProvider {
         }
     };
 
-
     public final BroadcastReceiver mGattUpdateReceiver1 = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -225,9 +229,7 @@ public class WidgetProvider extends AppWidgetProvider {
                     displayData(intent.getByteArrayExtra(BluetoothLeService.EXTRA_DATA_BYTES_WIDGET));
                 }
             }catch (Exception e){
-
             }
-
         }
     };
 
