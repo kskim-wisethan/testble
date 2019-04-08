@@ -42,9 +42,9 @@ public class WidgetProvider extends AppWidgetProvider {
     public int num = 0;
 
     String uuid = null;
-    String co2 = "--";
-    String temp = "--";
-    String humidity = "--";
+    static String co2 = "--";
+    static String temp = "--";
+    static String humidity = "--";
 
     private static PendingIntent mSender;
     private static AlarmManager mManager;
@@ -59,15 +59,12 @@ public class WidgetProvider extends AppWidgetProvider {
         String action = intent.getAction();
         con=context;
         if (action.equals(PENDING_ACTION) || action.equals("android.appwidget.action.APPWIDGET_UPDATE")) {  //30분마다 실행 or refresh 버튼 누를 때 실행
+
+
             long firstTime = System.currentTimeMillis() + WIDGET_UPDATE_INTERVAL;
             mSender = PendingIntent.getBroadcast(context, 0, intent, 0);
             mManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
             mManager.set(AlarmManager.RTC, firstTime, mSender);
-
-            co2 = "--";
-            temp = "--";
-            humidity = "--";
-
 
             SharedPreferences sharedPreferences = context.getSharedPreferences("Broadcast", Context.MODE_PRIVATE);  // 메인의 브로드캐스트와 구별을 위해 key"broad" value"widget"을 저장함
             SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -93,9 +90,6 @@ public class WidgetProvider extends AppWidgetProvider {
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
         appWidgetIds = appWidgetManager.getAppWidgetIds(new ComponentName(context, getClass()));
-
-//        ((MainActivity) MainActivity.mcontext).DataSet();
-
         System.out.println("Widget Update ok");
         for (int i = 0; i < appWidgetIds.length; i++) {
             updateAppWidget(context, appWidgetManager, appWidgetIds[i]);
@@ -128,6 +122,7 @@ public class WidgetProvider extends AppWidgetProvider {
             views.setTextViewText(R.id.co2_widget_tv, co2 + " ppm");
             app.updateAppWidget(ids[i], views);
         }
+
     }
 
     private PendingIntent getPendingIntent(Context context, int id) {
@@ -185,12 +180,20 @@ public class WidgetProvider extends AppWidgetProvider {
         public void onServiceConnected(ComponentName componentName, IBinder service) {
 
             mBluetoothLeService = ((BluetoothLeService.LocalBinder) service).getService();
+
+
+            int state = mBluetoothLeService.getConnectionState();
+            if (state == BluetoothLeService.STATE_CONNECTED) {
+
+            } else {
+                Toast.makeText(mBluetoothLeService, "ble Disconnected", Toast.LENGTH_SHORT).show();
+                co2 = "--";
+                temp = "--";
+                humidity = "--";
+                refresh(con);
+            }
             mBluetoothLeService.disconnect();
             mBluetoothLeService = ((BluetoothLeService.LocalBinder) service).getService();
-
-            if (!mBluetoothLeService.initialize()) {
-                //finish();
-            }
 
             SharedPreferences sharedPreferences = con.getSharedPreferences("SHARE_PREF1", Context.MODE_PRIVATE); //마지막에 연결된 uuid값을 가져와서 ble 연결시킴
             uuid = sharedPreferences.getString("uuid", null);
@@ -289,15 +292,7 @@ public class WidgetProvider extends AppWidgetProvider {
 
                 num++;
                 if (num == 4) {
-                    AppWidgetManager app = AppWidgetManager.getInstance(con);
-                    int ids[] = app.getAppWidgetIds(new ComponentName(con, this.getClass()));
-                    for (int i = 0; i < ids.length; i++) {
-                        RemoteViews views = new RemoteViews(con.getPackageName(), R.layout.widget_layout);
-                        views.setTextViewText(R.id.temp_widget_tv, temp + "˚");
-                        views.setTextViewText(R.id.humidity_widget_tv, humidity + "%");
-                        views.setTextViewText(R.id.co2_widget_tv, co2 + " ppm");
-                        app.updateAppWidget(ids[i], views);
-                    }
+                    refresh(con);
                 }
 
 
