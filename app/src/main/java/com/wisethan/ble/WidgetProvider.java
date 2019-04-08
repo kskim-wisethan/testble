@@ -45,6 +45,7 @@ public class WidgetProvider extends AppWidgetProvider {
     static String co2 = "--";
     static String temp = "--";
     static String humidity = "--";
+    static boolean on=true;
 
     private static PendingIntent mSender;
     private static AlarmManager mManager;
@@ -57,25 +58,28 @@ public class WidgetProvider extends AppWidgetProvider {
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
         String action = intent.getAction();
+
+        System.out.println("action"+action);
         con=context;
         if (action.equals(PENDING_ACTION) || action.equals("android.appwidget.action.APPWIDGET_UPDATE")) {  //30분마다 실행 or refresh 버튼 누를 때 실행
 
-
-            long firstTime = System.currentTimeMillis() + WIDGET_UPDATE_INTERVAL;
-            mSender = PendingIntent.getBroadcast(context, 0, intent, 0);
-            mManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-            mManager.set(AlarmManager.RTC, firstTime, mSender);
+            if (on == true&& action.equals("android.appwidget.action.APPWIDGET_UPDATE")){ //위젯 삭제시 recive 막기 위해
+                long firstTime = System.currentTimeMillis() + WIDGET_UPDATE_INTERVAL;
+                mSender = PendingIntent.getBroadcast(context, 0, intent, 0);
+                mManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+                mManager.set(AlarmManager.RTC, firstTime, mSender);
+            }
+            if(on == true){
+                Toast.makeText(context, "Read", Toast.LENGTH_SHORT).show();
+            }
 
             SharedPreferences sharedPreferences = context.getSharedPreferences("Broadcast", Context.MODE_PRIVATE);  // 메인의 브로드캐스트와 구별을 위해 key"broad" value"widget"을 저장함
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putString("broad", "widget");
             editor.commit();
-            Toast.makeText(context, "Read", Toast.LENGTH_SHORT).show();
             Intent gattServiceIntent = new Intent(context.getApplicationContext(), BluetoothLeService.class);   //ble 연결 후 데이터 받아오기 시작
             context.getApplicationContext().bindService(gattServiceIntent, mServiceConnection, context.getApplicationContext().BIND_AUTO_CREATE);
             context.getApplicationContext().registerReceiver(mGattUpdateReceiver1, makeGattUpdateIntentFilter());
-
-            refresh(con);
         } else if (action.equals("android.appwidget.action.APPWIDGET_BIND")) { // MainActivity에서 ble 값을 받아 오고나서 실행
             SharedPreferences sharedPreferences = context.getSharedPreferences("SHARE_PREF1", Context.MODE_PRIVATE);
             uuid = sharedPreferences.getString("uuid", null);
@@ -103,11 +107,13 @@ public class WidgetProvider extends AppWidgetProvider {
 
     @Override
     public void onEnabled(Context context) {
+        on = true;
         super.onEnabled(context);
     }
 
     @Override
     public void onDisabled(Context context) {
+        on = false;
         super.onDisabled(context);
     }
 
@@ -122,7 +128,6 @@ public class WidgetProvider extends AppWidgetProvider {
             views.setTextViewText(R.id.co2_widget_tv, co2 + " ppm");
             app.updateAppWidget(ids[i], views);
         }
-
     }
 
     private PendingIntent getPendingIntent(Context context, int id) {
@@ -181,10 +186,17 @@ public class WidgetProvider extends AppWidgetProvider {
 
             mBluetoothLeService = ((BluetoothLeService.LocalBinder) service).getService();
 
-
             int state = mBluetoothLeService.getConnectionState();
             if (state == BluetoothLeService.STATE_CONNECTED) {
+                mBluetoothLeService.disconnect();
+                mBluetoothLeService = ((BluetoothLeService.LocalBinder) service).getService();
 
+                SharedPreferences sharedPreferences = con.getSharedPreferences("SHARE_PREF1", Context.MODE_PRIVATE); //마지막에 연결된 uuid값을 가져와서 ble 연결시킴
+                uuid = sharedPreferences.getString("uuid", null);
+
+                if(uuid!=null){
+                    mBluetoothLeService.connect(uuid);
+                }
             } else {
                 Toast.makeText(mBluetoothLeService, "ble Disconnected", Toast.LENGTH_SHORT).show();
                 co2 = "--";
@@ -192,15 +204,7 @@ public class WidgetProvider extends AppWidgetProvider {
                 humidity = "--";
                 refresh(con);
             }
-            mBluetoothLeService.disconnect();
-            mBluetoothLeService = ((BluetoothLeService.LocalBinder) service).getService();
 
-            SharedPreferences sharedPreferences = con.getSharedPreferences("SHARE_PREF1", Context.MODE_PRIVATE); //마지막에 연결된 uuid값을 가져와서 ble 연결시킴
-            uuid = sharedPreferences.getString("uuid", null);
-
-            if(uuid!=null){
-                mBluetoothLeService.connect(uuid);
-            }
         }
 
         @Override
