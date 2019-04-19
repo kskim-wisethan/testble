@@ -192,13 +192,14 @@ public class WidgetProvider extends AppWidgetProvider {
             mBluetoothLeService = ((BluetoothLeService.LocalBinder) service).getService();
 
             int state = mBluetoothLeService.getConnectionState();
+            System.out.println("111111111"+state);
             if (state == BluetoothLeService.STATE_CONNECTED) {
                 mBluetoothLeService.disconnect();
                 mBluetoothLeService = ((BluetoothLeService.LocalBinder) service).getService();
 
                 SharedPreferences sharedPreferences = con.getSharedPreferences("SHARE_PREF1", Context.MODE_PRIVATE); //마지막에 연결된 uuid값을 가져와서 ble 연결시킴
                 uuid = sharedPreferences.getString("uuid", null);
-                Toast.makeText(mBluetoothLeService, uuid, Toast.LENGTH_SHORT).show();
+                Toast.makeText(mBluetoothLeService, "refresh", Toast.LENGTH_SHORT).show();
                 if(uuid!=null){
                     mBluetoothLeService.connect(uuid);
                 }
@@ -298,6 +299,7 @@ public class WidgetProvider extends AppWidgetProvider {
 
                 num++;
                 if (num == 4) {
+                    Toast.makeText(mBluetoothLeService, "refresh", Toast.LENGTH_SHORT).show();
                     refresh(con);
                 }
 

@@ -69,6 +69,8 @@ public class BluetoothLeService extends Service {   // ble 값 받아오기
                 if(broad.equals("widget")){
                     intentAction = ACTION_GATT_CONNECTED_WIDGET;
                 }else {
+
+
                     intentAction = ACTION_GATT_CONNECTED;
                 }
                 mConnectionState = STATE_CONNECTED;
